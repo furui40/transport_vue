@@ -1,0 +1,22 @@
+import { createStore } from 'vuex';
+import user from './modules/user'; // 引入用户模块
+
+const store = createStore({
+    modules: {
+        user // 注册用户模块
+    },
+    state: {
+        // 可以在这里配置全局的状态
+    },
+    mutations: {
+        // 全局 mutation
+    },
+    actions: {
+        // 全局 action
+    },
+    getters: {
+        // 全局 getters
+    }
+});
+
+export default store;
