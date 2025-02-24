@@ -28,15 +28,11 @@ export default {
       router.push('/login'); // 跳转到登录页面
     };
 
-    const goToRegister = () => {
-      router.push('/register'); // 跳转到注册页面
-    };
-
     const goToGuest = () => {
       router.push('/register'); // 未来完善游客浏览功能后再调整
     };
 
-    return { isUserLoggedIn, goToLogin, goToRegister, goToGuest };
+    return { isUserLoggedIn, goToLogin, goToGuest };
   }
 }
 </script>
@@ -44,13 +40,13 @@ export default {
 <style scoped>
 .welcome-container {
   text-align: center;
-  margin: 0; /* 去除默认 margin */
-  padding: 0; /* 去除默认 padding */
+  margin: 0; 
+  padding: 0; 
   background-image: url('@/assets/welcome-background.png');
-  background-size: cover; /* 保证背景覆盖整个容器 */
-  background-position: center; /* 背景图片居中 */
-  height: 100vh; /* 使背景图片充满整个屏幕 */
-  color: white; /* 设置字体颜色为白色 */
+  background-size: cover; 
+  background-position: center; 
+  height: 100vh; 
+  color: white; 
 }
 
 h1 {

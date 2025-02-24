@@ -34,6 +34,7 @@
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { ElMessage } from 'element-plus';
 
 export default {
   name: 'TopNavbar',
@@ -51,6 +52,7 @@ export default {
     const logout = () => {
       store.dispatch('user/logout'); // 清除用户信息
       router.push('/'); // 跳转到欢迎页
+      ElMessage.success('已退出登录');
     };
 
     // 跳转到登录页

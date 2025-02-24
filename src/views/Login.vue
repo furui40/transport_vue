@@ -75,38 +75,37 @@ export default {
 
     // 登录方法
     const login = async () => {
-      try {
+    try {
         const response = await axios.post('http://localhost:8080/web/login', 
-          `username=${form.username}&password=${form.password}`, {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          }
+            `username=${form.username}&password=${form.password}`, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            }
         );
 
         if (response.data.code === 200) {
-          const userId = response.data.data;
-          const user = {
-            username: form.username,
-            userId: userId,
-            role: 'normal'
-          };
+            const userId = response.data.data;
+            const user = {
+                username: form.username,
+                userId: userId,
+                role: 'normal' // 根据实际接口返回的角色调整
+            };
 
-          store.dispatch('user/login', user);
-          router.push('/home');
-          ElMessage.success('登录成功！');
-          console.log('Login successful', response.data.message);
+            // 调用 Vuex action 更新登录状态
+            store.dispatch('user/login', user);
+
+            // 跳转到首页或其他目标页面
+            router.push('/home');
+            ElMessage.success('登录成功！');
         } else {
-          ElMessage.error(`登录失败: ${response.data.message}`);
-          console.error('Login failed: ', response.data.message);
-
-
+            ElMessage.error(`登录失败: ${response.data.message}`);
         }
-      } catch (error) {
-        ElMessage.error(`登录失败: ${response.data.message}`);
+    } catch (error) {
+        ElMessage.error('登录过程中出现错误，请稍后再试。');
         console.error('Error during login: ', error);
-      }
-    };
+    }
+};
 
     // 注册方法
     const register = async () => {

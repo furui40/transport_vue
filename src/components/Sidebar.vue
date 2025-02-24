@@ -26,38 +26,36 @@
       <el-sub-menu index="1">
         <template #title>
           <el-icon><location /></el-icon>
-          <span>导航一</span>
+          <span class="menu-item-text">查询功能</span>
         </template>
-        <el-menu-item-group title="组一">
-          <el-menu-item index="1-1">项一</el-menu-item>
-          <el-menu-item index="1-2">项二</el-menu-item>
+        <el-menu-item-group title="传感器基本信息">
+          <el-menu-item index="1-1">传感器基本信息查询</el-menu-item>
         </el-menu-item-group>
-        <el-menu-item-group title="组二">
-          <el-menu-item index="1-3">项三</el-menu-item>
+        <el-menu-item-group title="数据库查询">
+          <el-menu-item index="1-2" @click="goToHighSensorSearch">高频传感器数据查询</el-menu-item>
+          <el-menu-item index="1-3">动态称重数据查询</el-menu-item>
         </el-menu-item-group>
         <el-sub-menu index="1-4">
-          <template #title>项四</template>
-          <el-menu-item index="1-4-1">项一</el-menu-item>
+          <template #title>其他数据查询</template>
+          <el-menu-item index="1-4-1">气象数据查询</el-menu-item>
         </el-sub-menu>
       </el-sub-menu>
 
-      <!-- 导航二 -->
       <el-menu-item index="2">
         <el-icon><Menu /></el-icon>
-        <span>导航二</span>
+        <span>数据分析</span>
       </el-menu-item>
 
-      <!-- 导航三 -->
       <el-menu-item index="3">
         <el-icon><Document /></el-icon>
-        <span>导航三</span>
+        <span>下载管理</span>
       </el-menu-item>
 
-      <!-- 导航四 -->
       <el-menu-item index="4">
         <el-icon><setting /></el-icon>
-        <span>导航四</span>
+        <span>用户设置</span>
       </el-menu-item>
+
     </el-menu>
   </el-aside>
 </template>
@@ -83,6 +81,10 @@ const goToHome = () => {
   router.push('/home'); // 跳转到主页
 };
 
+const goToHighSensorSearch = () => {
+  router.push('/search/highsensor'); // 跳转到高频传感器数据查询
+};
+
 // 菜单展开事件
 const handleOpen = (key, keyPath) => {
   console.log('Open: ', key, keyPath);
@@ -100,6 +102,8 @@ const handleClose = (key, keyPath) => {
   padding: 0;
   height: 100vh;
   border-right: 1px solid #ddd;
+  position: sticky; /* 使导航栏在滚动时跟随 */
+  top: 0; /* 固定在顶部 */
 }
 
 .el-menu-vertical-demo {
@@ -122,6 +126,12 @@ const handleClose = (key, keyPath) => {
 }
 
 .el-sub-menu__title {
+  color: #fff;
+}
+
+.menu-item-text {
+  font-size: 16px;
+  font-weight: 600;
   color: #fff;
 }
 </style>
