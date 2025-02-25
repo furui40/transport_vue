@@ -1,9 +1,11 @@
 import { createStore } from 'vuex';
 import user from './modules/user'; // 引入用户模块
+import table from './modules/table'; // 引入 table 模块
 
 const store = createStore({
     modules: {
-        user // 注册用户模块
+        user, // 注册用户模块
+        table, // 注册 table 模块
     },
     state: {
         // 可以在这里配置全局的状态

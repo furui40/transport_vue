@@ -22,40 +22,43 @@
         <span>管理员</span>
       </el-menu-item>
 
-      <!-- 其他自定义菜单项 -->
+      <!-- 查询功能 -->
       <el-sub-menu index="1">
         <template #title>
           <el-icon><location /></el-icon>
           <span class="menu-item-text">查询功能</span>
         </template>
-        <el-menu-item-group title="传感器基本信息">
-          <el-menu-item index="1-1">传感器基本信息查询</el-menu-item>
+        <el-menu-item-group v-if="!isGuest" title="传感器基本信息">
+          <el-menu-item index="1-1" >传感器基本信息查询</el-menu-item>
         </el-menu-item-group>
         <el-menu-item-group title="数据库查询">
-          <el-menu-item index="1-2" @click="goToHighSensorSearch">高频传感器数据查询</el-menu-item>
-          <el-menu-item index="1-3">动态称重数据查询</el-menu-item>
+          <el-menu-item index="1-2" @click="goToHighSensorSearch" v-if="!isGuest">高频传感器数据查询</el-menu-item>
+          <el-menu-item index="1-3" @click="goToDynamicWeighingSearch">动态称重数据查询</el-menu-item>
+          <el-menu-item index="1-4" @click="goToWeatherSearch">气象数据查询</el-menu-item>
         </el-menu-item-group>
-        <el-sub-menu index="1-4">
-          <template #title>其他数据查询</template>
-          <el-menu-item index="1-4-1">气象数据查询</el-menu-item>
+        <el-sub-menu index="1-5" v-if="!isGuest">
+          <template #title class="menu-item-text">综合数据查询</template>
+          <el-menu-item index="1-5-1" @click="goToComprehensiveSearch">综合数据查询</el-menu-item>
         </el-sub-menu>
       </el-sub-menu>
 
-      <el-menu-item index="2">
+      <!-- 数据分析 -->
+      <el-menu-item index="2" v-if="!isGuest">
         <el-icon><Menu /></el-icon>
         <span>数据分析</span>
       </el-menu-item>
 
-      <el-menu-item index="3">
+      <!-- 下载管理 -->
+      <el-menu-item index="3" v-if="!isGuest">
         <el-icon><Document /></el-icon>
         <span>下载管理</span>
       </el-menu-item>
 
-      <el-menu-item index="4">
+      <!-- 用户设置 -->
+      <el-menu-item index="4" v-if="!isGuest">
         <el-icon><setting /></el-icon>
         <span>用户设置</span>
       </el-menu-item>
-
     </el-menu>
   </el-aside>
 </template>
@@ -76,6 +79,9 @@ const isUserLoggedIn = computed(() => store.state.user.isLoggedIn);
 // 计算属性：是否是管理员
 const isAdmin = computed(() => store.state.user.role === 'admin');
 
+// 计算属性：是否是游客
+const isGuest = computed(() => store.state.user.role === 'guest');
+
 // 跳转到主页
 const goToHome = () => {
   router.push('/home'); // 跳转到主页
@@ -83,6 +89,18 @@ const goToHome = () => {
 
 const goToHighSensorSearch = () => {
   router.push('/search/highsensor'); // 跳转到高频传感器数据查询
+};
+
+const goToDynamicWeighingSearch = () => {
+  router.push('/search/dynamicweighing'); // 跳转到动态称重数据查询
+};
+
+const goToWeatherSearch = () => {
+  router.push('/search/weather'); // 跳转到气象数据查询
+};
+
+const goToComprehensiveSearch = () => {
+  router.push('/search/comprehensive'); // 跳转到综合数据查询
 };
 
 // 菜单展开事件
@@ -100,7 +118,7 @@ const handleClose = (key, keyPath) => {
 .left-menu {
   background-color: #545c64;
   padding: 0;
-  height: 100vh;
+  height: 120vh;
   border-right: 1px solid #ddd;
   position: sticky; /* 使导航栏在滚动时跟随 */
   top: 0; /* 固定在顶部 */

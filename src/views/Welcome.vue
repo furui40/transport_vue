@@ -29,7 +29,13 @@ export default {
     };
 
     const goToGuest = () => {
-      router.push('/register'); // 未来完善游客浏览功能后再调整
+      // 设置用户为游客
+      store.dispatch('user/login', {
+        username: '游客',
+        userId: '0', // 游客没有用户 ID
+        role: 'guest',
+      });
+      router.push('/home'); // 跳转到首页
     };
 
     return { isUserLoggedIn, goToLogin, goToGuest };
