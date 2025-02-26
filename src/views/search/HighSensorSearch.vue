@@ -59,9 +59,10 @@
       />
       <el-button type="primary" @click="handleQuery">开始查询</el-button>
       <el-button :disabled="!queryResult" @click="handleDownload">下载</el-button>
+      <el-button @click="handleExportFieldNames">导出数据项名</el-button>
     </div>
     <div class="center-text">
-      <h2>下方给出的图像仅供参考，更多功能请使用"数据分析"功能</h2>
+      <h2>下方给出的图像仅供参考，更多功能请使用"数据可视化"功能</h2>
     </div>
     <!-- 查询结果 -->
     <div class="query-result">
@@ -235,26 +236,109 @@ export default {
     },
     async handleQuery() {
     // 计算时间间隔
-    const timeDiff = this.stopTime - this.startTime;
-    if (timeDiff > 15) {
-      this.$confirm('当前查询间隔超过15秒，继续查询可能导致查询时间过长和图像渲染卡顿，是否继续查询？', '警告', {
-        confirmButtonText: '继续查询',
-        cancelButtonText: '取消查询',
-        type: 'warning'
-      }).then(() => {
-        this.executeQuery();
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消查询'
+      const timeDiff = this.stopTime - this.startTime;
+      if (timeDiff > 15) {
+        this.$confirm('当前查询间隔超过15秒，继续查询可能导致查询时间过长和图像渲染卡顿，是否继续查询？', '警告', {
+          confirmButtonText: '继续查询',
+          cancelButtonText: '取消查询',
+          type: 'warning'
+        }).then(() => {
+          this.executeQuery();
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消查询'
+          });
         });
-      });
-    } else {
-      this.executeQuery();
+      } else {
+        this.executeQuery();
+      }
+    },
+    async executeQuery() {
+      // 生成查询字段
+      const fields = [];
+      for (const decoder of this.decoders) {
+        this.selectedFields[decoder].forEach((field, index) => {
+          const channel = index + 1;
+          if (field.ori) {
+            fields.push(`${decoder}_Ch${channel}_ori`);
+          }
+          if (field.act) {
+            fields.push(`${decoder}_Ch${channel}_act`);
+          }
+          field.rev.forEach((rev, i) => {
+            if (rev) {
+              fields.push(`${decoder}_Ch${channel}_rev${i + 1}`);
+            }
+          });
+        });
+      }
+
+      // 检查参数
+      if (fields.length === 0) {
+        this.$message.warning('请至少选择一个字段');
+        return;
+      }
+      if (!this.startTime || !this.stopTime) {
+        this.$message.warning('请选择时间范围');
+        return;
+      }
+      const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
+        if (!userId) {
+          this.$message.warning('用户未登录，请先登录');
+          return;
+        }
+      // 发送请求
+      try {
+        const baseURL = 'http://localhost:8080';
+        const response = await axios.post(`${baseURL}/search/high_sensor`, null, {
+          params: {
+            fields: fields.join(','),
+            startTime: this.startTime,
+            stopTime: this.stopTime,
+            userId,
+          },
+        });
+
+        if (response.data.code === 200) {
+          this.queryResult = response.data.data;
+          this.$message.success('查询成功');
+          this.prepareChartData(); // 处理查询结果，准备图表数据
+        } else {
+          this.$message.error('查询失败: ' + response.data.message);
+        }
+      } catch (error) {
+        this.queryResult = null;
+        this.$message.error('查询失败: ' + error.message);
+      }
+    },
+
+  handleExportFieldNames() {
+    // 获取用户选择的 field
+    const selectedFields = this.getSelectedFields();
+
+    if (selectedFields.length === 0) {
+      this.$message.warning('请至少选择一个数据项');
+      return;
     }
+
+    // 拼接 field 为字符串
+    const fieldNamesString = selectedFields.join(',');
+
+    // 将拼接后的字符串显示在页面中
+    this.$alert(`<pre>${fieldNamesString}</pre>`, '导出的数据项名', {
+      dangerouslyUseHTMLString: true, // 允许使用 HTML
+      showConfirmButton: true,
+      confirmButtonText: '复制',
+      callback: () => {
+        // 点击“复制”按钮后，将内容复制到剪贴板
+        this.copyToClipboard(fieldNamesString);
+      },
+    });
   },
-  async executeQuery() {
-    // 生成查询字段
+
+  // 获取用户选择的 field
+  getSelectedFields() {
     const fields = [];
     for (const decoder of this.decoders) {
       this.selectedFields[decoder].forEach((field, index) => {
@@ -272,98 +356,72 @@ export default {
         });
       });
     }
+    return fields;
+  },
 
-    // 检查参数
-    if (fields.length === 0) {
-      this.$message.warning('请至少选择一个字段');
-      return;
-    }
-    if (!this.startTime || !this.stopTime) {
-      this.$message.warning('请选择时间范围');
-      return;
-    }
-    const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
-      if (!userId) {
-        this.$message.warning('用户未登录，请先登录');
+  // 复制内容到剪贴板
+  copyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    this.$message.success('已复制到剪贴板');
+  },
+
+    handleDownload() {
+      if (!this.queryResult) {
+        this.$message.warning('没有可下载的数据');
         return;
       }
-    // 发送请求
-    try {
-      const baseURL = 'http://localhost:8080';
-      const response = await axios.post(`${baseURL}/search/high_sensor`, null, {
-        params: {
-          fields: fields.join(','),
-          startTime: this.startTime,
-          stopTime: this.stopTime,
-          userId,
-        },
+
+      // 将数据转换为Excel格式
+      const data = this.queryResult.map(item => {
+        const date = new Date(item.time);
+        // 格式化时间戳，包含毫秒
+        const timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}.${String(date.getMilliseconds()).padStart(3, '0')}`;
+        
+        const row = { 时间戳: timestamp };
+        Object.entries(item.fieldValues).forEach(([field, value]) => {
+          row[this.getChineseFieldName(field)] = value;
+        });
+        return row;
       });
 
-      if (response.data.code === 200) {
-        this.queryResult = response.data.data;
-        this.$message.success('查询成功');
-        this.prepareChartData(); // 处理查询结果，准备图表数据
-      } else {
-        this.$message.error('查询失败: ' + response.data.message);
+      // 使用xlsx库生成Excel文件
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      XLSX.writeFile(workbook, '查询结果.xlsx');
+    },
+
+    getChineseFieldName(field) {
+      // 解析 field 字符串，例如 "1_Ch2_rev3"
+      const [decoder, channelPart, fieldType] = field.split('_'); // 分割字符串
+      const channel = parseInt(channelPart.replace('Ch', '')); // 提取信道编号
+      const decoderNumber = parseInt(decoder); // 提取解调器编号
+
+      // 获取传感器名称
+      const sensorName = this.channelNames[decoderNumber][channel];
+      if (!sensorName) {
+        return field; // 如果找不到传感器名称，返回原始字段
       }
-    } catch (error) {
-      this.queryResult = null;
-      this.$message.error('查询失败: ' + error.message);
-    }
-  },
 
-  handleDownload() {
-    if (!this.queryResult) {
-      this.$message.warning('没有可下载的数据');
-      return;
-    }
-
-    // 将数据转换为Excel格式
-    const data = this.queryResult.map(item => {
-      const date = new Date(item.time);
-      // 格式化时间戳，包含毫秒
-      const timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}.${String(date.getMilliseconds()).padStart(3, '0')}`;
-      
-      const row = { 时间戳: timestamp };
-      Object.entries(item.fieldValues).forEach(([field, value]) => {
-        row[this.getChineseFieldName(field)] = value;
-      });
-      return row;
-    });
-
-    // 使用xlsx库生成Excel文件
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, '查询结果.xlsx');
-  },
-
-  getChineseFieldName(field) {
-    // 解析 field 字符串，例如 "1_Ch2_rev3"
-    const [decoder, channelPart, fieldType] = field.split('_'); // 分割字符串
-    const channel = parseInt(channelPart.replace('Ch', '')); // 提取信道编号
-    const decoderNumber = parseInt(decoder); // 提取解调器编号
-
-    // 获取传感器名称
-    const sensorName = this.channelNames[decoderNumber][channel];
-    if (!sensorName) {
-      return field; // 如果找不到传感器名称，返回原始字段
-    }
-
-    // 根据字段类型生成中文列名
-    switch (fieldType) {
-      case 'ori':
-        return `${sensorName} 原始值`;
-      case 'act':
-        return `${sensorName} 实际值`;
-      default:
-        if (fieldType.startsWith('rev')) {
-          const revNumber = fieldType.replace('rev', ''); // 提取修正值编号
-          return `${sensorName} 修正值${revNumber}`;
-        }
-        return field; // 未知字段类型，返回原始字段
-    }
-  },
+      // 根据字段类型生成中文列名
+      switch (fieldType) {
+        case 'ori':
+          return `${sensorName} 原始值`;
+        case 'act':
+          return `${sensorName} 实际值`;
+        default:
+          if (fieldType.startsWith('rev')) {
+            const revNumber = fieldType.replace('rev', ''); // 提取修正值编号
+            return `${sensorName} 修正值${revNumber}`;
+          }
+          return field; // 未知字段类型，返回原始字段
+      }
+    },
 
     prepareChartData() {
         const chartData = {};

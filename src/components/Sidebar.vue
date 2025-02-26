@@ -17,9 +17,9 @@
       </el-menu-item>
 
       <!-- 管理员页面，只有管理员角色才显示 -->
-      <el-menu-item v-if="isAdmin" index="/admin">
+      <el-menu-item v-if="isAdmin" index="/admin" @click="goToAdminDownloadManage">
         <el-icon><setting /></el-icon>
-        <span>管理员</span>
+        <span>管理员页面</span>
       </el-menu-item>
 
       <!-- 查询功能 -->
@@ -29,33 +29,35 @@
           <span class="menu-item-text">查询功能</span>
         </template>
         <el-menu-item-group v-if="!isGuest" title="传感器基本信息">
-          <el-menu-item index="1-1" >传感器基本信息查询</el-menu-item>
+          <el-menu-item index="1-1" @click="goToBaseInformation">传感器基本信息查询</el-menu-item>
         </el-menu-item-group>
-        <el-menu-item-group title="数据库查询">
-          <el-menu-item index="1-2" @click="goToHighSensorSearch" v-if="!isGuest">高频传感器数据查询</el-menu-item>
-          <el-menu-item index="1-3" @click="goToDynamicWeighingSearch">动态称重数据查询</el-menu-item>
-          <el-menu-item index="1-4" @click="goToWeatherSearch">气象数据查询</el-menu-item>
+        <el-menu-item-group title="简单查询">
+          <el-menu-item index="1-2" @click="goToDynamicWeighingSearch">动态称重数据查询</el-menu-item>
+          <el-menu-item index="1-3" @click="goToWeatherSearch">气象数据查询</el-menu-item>
         </el-menu-item-group>
-        <el-sub-menu index="1-5" v-if="!isGuest">
-          <template #title class="menu-item-text">综合数据查询</template>
-          <el-menu-item index="1-5-1" @click="goToComprehensiveSearch">综合数据查询</el-menu-item>
+        <el-sub-menu index="1-4" v-if="!isGuest">
+          <template #title>
+            <span class="menu-item-text">高级查询</span>
+          </template>
+          <el-menu-item index="1-4-1" @click="goToHighSensorSearch">高频传感器查询</el-menu-item>
+          <el-menu-item index="1-4-2" @click="goToComprehensiveSearch">综合数据查询</el-menu-item>
         </el-sub-menu>
       </el-sub-menu>
 
       <!-- 数据分析 -->
-      <el-menu-item index="2" v-if="!isGuest">
+      <el-menu-item index="2" v-if="!isGuest" @click="goToDataVisualize">
         <el-icon><Menu /></el-icon>
-        <span>数据分析</span>
+        <span>数据可视化</span>
       </el-menu-item>
 
       <!-- 下载管理 -->
-      <el-menu-item index="3" v-if="!isGuest">
+      <el-menu-item index="3" v-if="(!isGuest) && (!isAdmin)" @click="goToUserDownloadManage">
         <el-icon><Document /></el-icon>
         <span>下载管理</span>
       </el-menu-item>
 
       <!-- 用户设置 -->
-      <el-menu-item index="4" v-if="!isGuest">
+      <el-menu-item index="4" v-if="!isGuest" @click="goToUserConfig">
         <el-icon><setting /></el-icon>
         <span>用户设置</span>
       </el-menu-item>
@@ -87,6 +89,11 @@ const goToHome = () => {
   router.push('/home'); // 跳转到主页
 };
 
+
+const goToBaseInformation = () => {
+  router.push('/search/baseinformation'); // 跳转到高频传感器数据查询
+};
+
 const goToHighSensorSearch = () => {
   router.push('/search/highsensor'); // 跳转到高频传感器数据查询
 };
@@ -101,6 +108,22 @@ const goToWeatherSearch = () => {
 
 const goToComprehensiveSearch = () => {
   router.push('/search/comprehensive'); // 跳转到综合数据查询
+};
+
+const goToUserDownloadManage = () => {
+  router.push('/download/userdownloadmanage'); // 跳转到用户下载管理查询
+};
+
+const goToAdminDownloadManage = () => {
+  router.push('/admin/admindownloadmanage'); // 跳转到用户下载管理查询
+};
+
+const goToDataVisualize = () => {
+  router.push('/visualize/datavisualize'); // 跳转到用户下载管理查询
+};
+
+const goToUserConfig = () => {
+  router.push('/userconfig'); // 跳转到用户下载管理查询
 };
 
 // 菜单展开事件

@@ -34,6 +34,9 @@ const user = {
             // 清除 localStorage 中的登录状态
             localStorage.removeItem('user');
         },
+        setRole(state, role) {
+            state.role = role; // 更新用户角色
+        },
         initializeStore(state) {
             // 从 localStorage 恢复登录状态
             const userData = localStorage.getItem('user');
@@ -62,6 +65,9 @@ const user = {
         },
         logout({ commit }) {
             commit('logout');
+        },
+        setRole({ commit }, role) {
+            commit('setRole', role); // 更新用户角色
         },
         initializeStore({ commit }) {
             commit('initializeStore');
