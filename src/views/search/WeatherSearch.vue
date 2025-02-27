@@ -80,7 +80,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']), // 映射 Vuex 的 getters
+    ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']), 
     // 过滤掉 timestamp 字段
     filteredColumns() {
       if (this.tableData.length === 0) return {};
@@ -101,7 +101,7 @@ export default {
         this.$message.warning('请选择时间范围');
         return;
       }
-      const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
+      const userId = this.$store.state.user.userId;
       if (!userId) {
         this.$message.warning('用户未登录，请先登录');
         return;

@@ -4,6 +4,9 @@
     <div class="logo" @click="goToWelcome">道路检测数据平台</div>
 
     <div class="right-container">
+      <!-- 显示用户头像 -->
+      <el-avatar :size="40" :src="avatarUrl" @click="goToUserConfig" />
+
       <!-- 显示用户名（登录时显示） -->
       <span v-if="isUserLoggedIn" class="welcome-message">
         用户：{{ username }}，欢迎使用道路检测数据平台
@@ -33,8 +36,9 @@
 <script>
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import axios from 'axios';
 
 export default {
   name: 'TopNavbar',
@@ -47,6 +51,37 @@ export default {
 
     // 计算属性：用户名
     const username = computed(() => store.state.user.userInfo);
+
+    // 计算属性：用户 ID
+    const userId = computed(() => store.state.user.userId);
+
+    // 头像 URL
+    const avatarUrl = ref('/avatar/0.png'); // 默认头像
+
+    // 获取用户头像
+    const fetchAvatar = async () => {
+      if (isUserLoggedIn.value) {
+        try {
+          const baseURL = 'http://localhost:8080';
+          const response = await axios.get(`${baseURL}/avatar/getavatar?userId=${userId.value}`);
+          if (response.data) {
+            avatarUrl.value = response.data; // 设置头像 URL
+          }
+        } catch (error) {
+          console.error('获取头像失败:', error);
+        }
+      }
+    };
+
+    // 组件加载时获取头像
+    onMounted(fetchAvatar);
+
+    // 跳转到用户配置页面
+    const goToUserConfig = () => {
+      if (isUserLoggedIn.value) {
+        router.push('/userconfig');
+      }
+    };
 
     // 退出登录
     const logout = () => {
@@ -68,6 +103,8 @@ export default {
     return {
       isUserLoggedIn,
       username,
+      avatarUrl,
+      goToUserConfig,
       logout,
       goToLogin,
       goToWelcome,

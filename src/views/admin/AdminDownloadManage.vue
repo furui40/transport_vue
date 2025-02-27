@@ -2,22 +2,22 @@
   <div class="admin-download-manage">
     <!-- 搜索区域 -->
     <el-row :gutter="20" class="search-row">
-      <el-col :span="6">
+      <el-col :span="8">
         <el-input v-model="userId" placeholder="请输入用户ID" clearable></el-input>
       </el-col>
-      <el-col :span="6">
-        <el-select v-model="selectedStatus" placeholder="请选择状态" clearable>
+            <el-col :span="4">
+        <el-button type="success" @click="searchByUserId">根据用户ID查询</el-button>
+      </el-col>
+      <el-col :span="4">
+        <el-button type="primary" @click="searchAll">查询所有数据</el-button>
+      </el-col>
+      <el-col :span="8">
+        <el-select v-model="selectedStatus" placeholder="筛选：请选择状态" clearable>
           <el-option label="已申请" value="已申请" />
           <el-option label="审核通过" value="审核通过" />
           <el-option label="审核不通过" value="审核不通过" />
           <el-option label="已完成" value="已完成" />
         </el-select>
-      </el-col>
-      <el-col :span="6">
-        <el-button type="primary" @click="searchAll">查询所有数据</el-button>
-      </el-col>
-      <el-col :span="6">
-        <el-button type="success" @click="searchByUserId">根据用户ID查询</el-button>
       </el-col>
     </el-row>
 
@@ -205,7 +205,15 @@ export default {
 
         if (response.data.code === 200) {
           this.$message.success('审核通过成功');
-          this.searchAll(); // 刷新数据
+
+          // 直接更新表格数据
+          this.selectedRows.forEach(row => {
+            row.status = '审核通过'; // 更新状态
+            row.msg = ''; // 清空消息
+          });
+
+          // 清空选中行
+          this.selectedRows = [];
         } else {
           this.$message.error('审核通过失败: ' + response.data.message);
         }
@@ -239,8 +247,16 @@ export default {
 
         if (response.data.code === 200) {
           this.$message.success('审核不通过成功');
-          this.searchAll(); // 刷新数据
-          this.rejectReason = ''; // 清空理由文本框
+
+          // 直接更新表格数据
+          this.selectedRows.forEach(row => {
+            row.status = '审核不通过'; // 更新状态
+            row.msg = this.rejectReason; // 设置不通过理由
+          });
+
+          // 清空选中行和理由文本框
+          this.selectedRows = [];
+          this.rejectReason = '';
         } else {
           this.$message.error('审核不通过失败: ' + response.data.message);
         }

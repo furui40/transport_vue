@@ -36,6 +36,14 @@ const user = {
         },
         setRole(state, role) {
             state.role = role; // 更新用户角色
+
+            // 更新 localStorage 中的角色
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                user.role = role;
+                localStorage.setItem('user', JSON.stringify(user));
+            }
         },
         initializeStore(state) {
             // 从 localStorage 恢复登录状态
