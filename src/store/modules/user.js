@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const user = {
     namespaced: true,
     state: {
@@ -6,6 +8,7 @@ const user = {
         userId: null,       // 用户 ID
         role: '',           // 用户角色
         loginTime: null,    // 登录时间
+        avatarUrl: '',      // 用户头像 URL
     },
     mutations: {
         login(state, user) {
@@ -30,6 +33,7 @@ const user = {
             state.userId = null;  // 清除 userId
             state.role = '';
             state.loginTime = null; // 清除登录时间
+            state.avatarUrl = '';
 
             // 清除 localStorage 中的登录状态
             localStorage.removeItem('user');
@@ -42,6 +46,16 @@ const user = {
             if (userData) {
                 const user = JSON.parse(userData);
                 user.role = role;
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+        },
+        setAvatarUrl(state, avatarUrl) {
+            state.avatarUrl = avatarUrl; // 更新用户角色
+            // 将头像 URL 保存到 localStorage
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                user.avatarUrl = avatarUrl;
                 localStorage.setItem('user', JSON.stringify(user));
             }
         },
@@ -60,6 +74,7 @@ const user = {
                     state.userId = user.userId;
                     state.role = user.role;
                     state.loginTime = user.loginTime;
+                    state.avatarUrl = user.avatarUrl || ''; // 恢复头像 URL
                 } else {
                     // 登录状态已过期，清除状态
                     localStorage.removeItem('user');
@@ -70,6 +85,15 @@ const user = {
     actions: {
         login({ commit }, user) {
             commit('login', user); // 提交 login mutation
+            axios.get(`http://localhost:8080/avatar/getavatar?userId=${user.userId}`)
+                .then(response => {
+                    if (response.data) {
+                        commit('setAvatarUrl', response.data); // 更新头像 URL
+                    }
+                })
+                .catch(error => {
+                    console.error('获取头像失败:', error);
+                });
         },
         logout({ commit }) {
             commit('logout');
@@ -90,6 +114,9 @@ const user = {
                 return true; // 返回 true 表示已过期
             }
             return false; // 返回 false 表示未过期
+        },
+        updateAvatar({ commit }, avatarUrl) {
+            commit('setAvatarUrl', avatarUrl);
         },
     },
     getters: {

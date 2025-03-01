@@ -41,6 +41,7 @@ export default {
         const response = await axios.get(`${baseURL}/avatar/getavatar?userId=${userId.value}`);
         if (response.data) {
           avatarUrl.value = response.data; // 设置头像 URL
+          store.dispatch('user/updateAvatar', avatarUrl.value);
         }
       } catch (error) {
         console.error('获取头像失败:', error);

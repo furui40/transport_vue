@@ -42,6 +42,13 @@
         >
           下载
         </el-button>
+        <el-button
+        type="info"
+        :disabled="!tableData.length"
+        @click="handleVisualize"
+      >
+        数据可视化
+      </el-button>
       </div>
     </div>
 
@@ -116,7 +123,7 @@ export default {
       stopTime: null, // 结束时间
       tableData: [], // 表格数据
       currentPage: 1, // 当前页码
-      pageSize: 20, // 每页显示的行数
+      pageSize: 10, // 每页显示的行数
     };
   },
   computed: {
@@ -145,6 +152,10 @@ export default {
   },
   methods: {
     // 处理查询
+    convertToLocalTime(utcTime) {
+      const date = new Date(utcTime); // 将 UTC 时间转换为 Date 对象
+      return date.toLocaleString(); // 返回本地时间字符串
+    },
     async handleQuery() {
       if (!this.startTime || !this.stopTime) {
         this.$message.warning('请选择时间范围');
@@ -175,8 +186,8 @@ export default {
         if (response.data.code === 200) {
           this.tableData = response.data.data.map(item => {
             const formattedItem = {
-              timestamp: new Date(item.timestamp).toLocaleString(), // 格式化时间戳
-              ...item, // 其他字段
+              ...item,
+              timestamp: this.convertToLocalTime(item.timestamp), // 转换时间
             };
             if (this.selectedDataType === 'dynamicWeighing') {
               formattedItem.id = item.id; // 动态称重数据包含 id
@@ -232,6 +243,20 @@ export default {
     // 处理分页变化
     handlePageChange(page) {
       this.currentPage = page;
+    },
+
+    handleVisualize() {
+      if (this.tableData.length === 0) {
+        this.$message.warning('没有数据可可视化');
+        return;
+      }
+      // 将数据存储到 Vuex
+      this.$store.dispatch('visualize/setVisualizeData', {
+        data: this.tableData,
+        dataType: this.selectedDataType,
+      });
+      // 跳转到数据可视化页面
+      this.$router.push({ path: '/visualize' });
     },
   },
 };

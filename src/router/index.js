@@ -35,7 +35,7 @@ const routes = [
   { path: '/download/historyapply', component: HistoryApply, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/newapply', component: NewApply, meta: { requiresAuth: true } }, // 需要登录
   { path: '/admin/admindownloadmanage', component: AdminDownloadManage, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
-  { path: '/visualize/datavisualize', component: DataVisualize, meta: { requiresAuth: true } }, // 需要登录
+  { path: '/visualize', component: DataVisualize, meta: { requiresAuth: true } }, // 需要登录
   { path: '/userconfig', component: UserConfig, meta: { requiresAuth: true } }, // 需要登录
   { path: '/config/avatar', component: ModifyAvatar, meta: { requiresAuth: true } }, // 需要登录
   { path: '/config/password', component: ModifyPassword, meta: { requiresAuth: true } }, // 需要登录

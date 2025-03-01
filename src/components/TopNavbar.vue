@@ -1,7 +1,7 @@
 <template>
   <div class="navbar">
     <!-- 点击 logo 跳转到欢迎页 -->
-    <div class="logo" @click="goToWelcome">道路检测数据平台</div>
+    <div class="logo" @click="goToWelcome">道路监测数据平台</div>
 
     <div class="right-container">
       <!-- 显示用户头像 -->
@@ -36,7 +36,7 @@
 <script>
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
 
@@ -56,7 +56,14 @@ export default {
     const userId = computed(() => store.state.user.userId);
 
     // 头像 URL
-    const avatarUrl = ref('/avatar/0.png'); // 默认头像
+    const avatarUrl = computed(() => store.state.user.avatarUrl);
+
+    // 监听 isUserLoggedIn 和 userId 的变化
+    watch([isUserLoggedIn, userId], () => {
+            if (isUserLoggedIn.value) {
+                store.dispatch('user/updateAvatar', avatarUrl.value);
+            }
+        });
 
     // 获取用户头像
     const fetchAvatar = async () => {

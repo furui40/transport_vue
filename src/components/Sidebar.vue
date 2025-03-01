@@ -12,7 +12,7 @@
     >
       <!-- 主页 -->
       <el-menu-item index="/home" @click="goToHome">
-        <el-icon><location /></el-icon>
+        <el-icon><House /></el-icon>
         <span>主页</span>
       </el-menu-item>
 
@@ -22,26 +22,25 @@
         <span>管理员页面</span>
       </el-menu-item>
 
+      <el-menu-item v-if="!isGuest" @click="goToBaseInformation">
+        <el-icon><location /></el-icon>
+        <span>传感器位置信息</span>
+      </el-menu-item>
+
       <!-- 查询功能 -->
       <el-sub-menu index="1">
         <template #title>
-          <el-icon><location /></el-icon>
-          <span class="menu-item-text">查询功能</span>
+          <el-icon><Search /></el-icon>
+          <span class="menu-item-text">数据查询</span>
         </template>
-        <el-menu-item-group v-if="!isGuest" title="传感器基本信息">
-          <el-menu-item index="1-1" @click="goToBaseInformation">传感器基本信息查询</el-menu-item>
-        </el-menu-item-group>
-        <el-menu-item-group title="简单查询">
+        <el-menu-item-group title="游客功能" v-if="isGuest">
           <el-menu-item index="1-2" @click="goToDynamicWeighingSearch">动态称重数据查询</el-menu-item>
           <el-menu-item index="1-3" @click="goToWeatherSearch">气象数据查询</el-menu-item>
         </el-menu-item-group>
-        <el-sub-menu index="1-4" v-if="!isGuest">
-          <template #title>
-            <span class="menu-item-text">高级查询</span>
-          </template>
+        <el-menu-item-group title="数据查询" v-if="!isGuest">
           <el-menu-item index="1-4-1" @click="goToHighSensorSearch">高频传感器查询</el-menu-item>
           <el-menu-item index="1-4-2" @click="goToComprehensiveSearch">综合数据查询</el-menu-item>
-        </el-sub-menu>
+        </el-menu-item-group>
       </el-sub-menu>
 
       <!-- 数据分析 -->
@@ -69,7 +68,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { Document, Menu, Location, Setting } from '@element-plus/icons-vue';
+import { Search,House,Document, Menu, Location, Setting } from '@element-plus/icons-vue';
 
 // 使用 Vuex 和 Router
 const store = useStore();
@@ -119,7 +118,7 @@ const goToAdminDownloadManage = () => {
 };
 
 const goToDataVisualize = () => {
-  router.push('/visualize/datavisualize'); // 跳转到用户下载管理查询
+  router.push('/visualize'); // 跳转到用户下载管理查询
 };
 
 const goToUserConfig = () => {

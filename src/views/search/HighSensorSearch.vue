@@ -59,6 +59,7 @@
       />
       <el-button type="primary" @click="handleQuery">开始查询</el-button>
       <el-button :disabled="!queryResult" @click="handleDownload">下载</el-button>
+      <el-button :disabled="!queryResult" @click="toggleChartMode" >{{ isSmooth ? '切换为折线' : '切换为平滑曲线' }}</el-button>
       <el-button @click="handleExportFieldNames">导出数据项名</el-button>
     </div>
     <div class="center-text">
@@ -219,9 +220,15 @@ export default {
       stopTime: null, // 结束时间
       queryResult: null, // 查询结果
       samplingInterval: 10, // 采样间隔，默认每 10 个数据点选择一个
+      isSmooth: false, // 是否显示平滑曲线
+      chartData: {}, // 图表数据
     };
   },
   methods: {
+    toggleChartMode() {
+      this.isSmooth = !this.isSmooth; // 切换状态
+      this.renderCharts(); // 重新渲染图表
+    },
     // 切换解调器
     handleDecoderChange(decoder) {
       this.currentDecoder = decoder;
@@ -313,62 +320,62 @@ export default {
       }
     },
 
-  handleExportFieldNames() {
-    // 获取用户选择的 field
-    const selectedFields = this.getSelectedFields();
+    handleExportFieldNames() {
+      // 获取用户选择的 field
+      const selectedFields = this.getSelectedFields();
 
-    if (selectedFields.length === 0) {
-      this.$message.warning('请至少选择一个数据项');
-      return;
-    }
+      if (selectedFields.length === 0) {
+        this.$message.warning('请至少选择一个数据项');
+        return;
+      }
 
-    // 拼接 field 为字符串
-    const fieldNamesString = selectedFields.join(',');
+      // 拼接 field 为字符串
+      const fieldNamesString = selectedFields.join(',');
 
-    // 将拼接后的字符串显示在页面中
-    this.$alert(`<pre>${fieldNamesString}</pre>`, '导出的数据项名', {
-      dangerouslyUseHTMLString: true, // 允许使用 HTML
-      showConfirmButton: true,
-      confirmButtonText: '复制',
-      callback: () => {
-        // 点击“复制”按钮后，将内容复制到剪贴板
-        this.copyToClipboard(fieldNamesString);
-      },
-    });
-  },
-
-  // 获取用户选择的 field
-  getSelectedFields() {
-    const fields = [];
-    for (const decoder of this.decoders) {
-      this.selectedFields[decoder].forEach((field, index) => {
-        const channel = index + 1;
-        if (field.ori) {
-          fields.push(`${decoder}_Ch${channel}_ori`);
-        }
-        if (field.act) {
-          fields.push(`${decoder}_Ch${channel}_act`);
-        }
-        field.rev.forEach((rev, i) => {
-          if (rev) {
-            fields.push(`${decoder}_Ch${channel}_rev${i + 1}`);
-          }
-        });
+      // 将拼接后的字符串显示在页面中
+      this.$alert(`<pre>${fieldNamesString}</pre>`, '导出的数据项名', {
+        dangerouslyUseHTMLString: true, // 允许使用 HTML
+        showConfirmButton: true,
+        confirmButtonText: '复制',
+        callback: () => {
+          // 点击“复制”按钮后，将内容复制到剪贴板
+          this.copyToClipboard(fieldNamesString);
+        },
       });
-    }
-    return fields;
-  },
+    },
 
-  // 复制内容到剪贴板
-  copyToClipboard(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    this.$message.success('已复制到剪贴板');
-  },
+    // 获取用户选择的 field
+    getSelectedFields() {
+      const fields = [];
+      for (const decoder of this.decoders) {
+          this.selectedFields[decoder].forEach((field, index) => {
+              const channel = index + 1;
+              if (field.ori) {
+                  fields.push(`${decoder}_Ch${channel}_ori`);
+              }
+              if (field.act) {
+                  fields.push(`${decoder}_Ch${channel}_act`);
+              }
+              field.rev.forEach((rev, i) => {
+                  if (rev) {
+                      fields.push(`${decoder}_Ch${channel}_rev${i + 1}`);
+                  }
+              });
+          });
+      }
+      return fields;
+    },
+
+    // 复制内容到剪贴板
+    copyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      this.$message.success('已复制到剪贴板');
+    },
 
     handleDownload() {
       if (!this.queryResult) {
@@ -424,28 +431,27 @@ export default {
     },
 
     prepareChartData() {
-        const chartData = {};
+      const chartData = {};
 
-        // 遍历查询结果，按 field 类型分类
-        this.queryResult.forEach((item, index) => {
-            const time = new Date(item.time).getTime(); // 将时间转换为时间戳
-            Object.entries(item.fieldValues).forEach(([field, value]) => {
-            if (!chartData[field]) {
-                chartData[field] = [];
-            }
-            // 根据采样间隔选择数据点
-            if (index % this.samplingInterval === 0) {
-                chartData[field].push([time, value]); // 存储时间和值
-            }
-            });
-        });
+      // 遍历查询结果，按 field 类型分类
+      this.queryResult.forEach((item, index) => {
+          const time = new Date(item.time).getTime(); // 将时间转换为时间戳
+          Object.entries(item.fieldValues).forEach(([field, value]) => {
+              if (!chartData[field]) {
+                  chartData[field] = [];
+              }
+              // 根据采样间隔选择数据点
+              if (index % this.samplingInterval === 0) {
+                  chartData[field].push([time, value]); // 存储时间和值
+              }
+          });
+      });
 
-        this.chartData = chartData; // 存储分类后的数据
-        this.renderCharts(); // 渲染图表
-    },
+      this.chartData = chartData; // 存储分类后的数据
+      this.renderCharts(); // 渲染图表
+  },
 
-
-    renderCharts() {
+  renderCharts() {
       const chartContainer = this.$refs.chartContainer;
       chartContainer.innerHTML = ''; // 清空容器
 
@@ -462,6 +468,15 @@ export default {
         const minValue = Math.min(...values);
         const maxValue = Math.max(...values);
 
+        // 计算时间范围
+        const startTime = data[0][0]; // 数据起始时间
+        const endTime = data[data.length - 1][0]; // 数据结束时间
+        const totalTimeRange = endTime - startTime; // 总时间范围
+        const initialTimeRange = 5000; // 初始显示5秒
+
+        // 设置图表的初始显示范围为前5秒
+        const initialEndTime = startTime + initialTimeRange;
+
         const option = {
           title: {
             text: field, // 图表标题为 field 名称
@@ -472,16 +487,31 @@ export default {
           },
           xAxis: {
             type: 'time',
+            min: startTime, // 最小时间为数据起始时间
+            max: endTime, // 最大时间为数据结束时间
           },
           yAxis: {
             type: 'value',
             min: minValue - (maxValue - minValue) * 0.1, // 动态设置 Y 轴最小值
             max: maxValue + (maxValue - minValue) * 0.1, // 动态设置 Y 轴最大值
           },
+          dataZoom: [
+            {
+              type: 'inside', // 内部缩放
+              start: 0,
+              end: (initialTimeRange / totalTimeRange) * 100, // 初始显示5秒
+            },
+            {
+              type: 'slider', // 滑动条
+              start: 0,
+              end: 100, // 滚动条覆盖所有数据
+            },
+          ],
           series: [
             {
               data: data,
               type: 'line',
+              smooth: this.isSmooth, // 根据 isSmooth 状态设置是否平滑
             },
           ],
         };
@@ -569,11 +599,11 @@ export default {
 }
 
 .query-result {
-  background: #f5f5f5;
-  padding: 10px;
-  border-radius: 4px;
-  max-height: 800px; /* 调整高度以容纳多张图表 */
-  overflow-y: auto;
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    max-height: 800px;
+    overflow-y: auto;
 }
 
 .center-text {
