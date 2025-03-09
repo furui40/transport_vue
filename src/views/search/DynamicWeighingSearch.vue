@@ -110,6 +110,10 @@ export default {
         this.$message.warning('请选择时间范围');
         return;
       }
+      if (this.stopTime - this.startTime > 21600) {
+        this.$message.warning('游客模式只能查询六个小时，更长时间请登录后使用');
+        return;
+      }
       const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
       if (!userId) {
         this.$message.warning('用户未登录，请先登录');

@@ -47,6 +47,9 @@
         <p><strong>埋藏深度：</strong>{{ selectedSensor.depth }}</p>
         <p><strong>制造厂商：</strong>{{ selectedSensor.manufacturer }}</p>
         <p><strong>其他：</strong>{{ selectedSensor.other }}</p>
+        <div v-if="selectedSensor.image" class="sensor-image">
+          <img :src="getSensorImageUrl(selectedSensor.image)" alt="传感器实物图" class="sensor-photo" />
+        </div>
         <el-button 
           v-if="isEditMode" 
           type="danger" 
@@ -97,6 +100,9 @@
           <el-form-item label="其他">
             <el-input v-model="newSensor.other" />
           </el-form-item>
+          <el-form-item label="图像">
+            <el-input v-model="newSensor.image" />
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="addSensor">添加传感器</el-button>
           </el-form-item>
@@ -133,6 +139,9 @@
           <el-form-item label="其他">
             <el-input v-model="editSensor.other" />
           </el-form-item>
+          <el-form-item label="图像">
+            <el-input v-model="editSensor.image" />
+          </el-form-item>
         </el-form>
         <template #footer>
           <el-button @click="editDialogVisible = false">取消</el-button>
@@ -155,14 +164,14 @@ export default {
   setup() {
     const store = useStore();
      const sections = [
-      { name: '断面1', image: '/images/section1.png', dataFile: '/data/section1.js' },
-      { name: '断面2', image: '/images/section2.png', dataFile: '/data/section2.js' },
-      { name: '断面3', image: '/images/section3.png', dataFile: '/data/section3.js' },
-      { name: '断面4', image: '/images/section4.png', dataFile: '/data/section4.js' },
-      { name: '断面5', image: '/images/section5.png', dataFile: '/data/section5.js' },
-      { name: '断面6', image: '/images/section6.png', dataFile: '/data/section6.js' },
-      { name: '断面7', image: '/images/section7.png', dataFile: '/data/section7.js' },
-      { name: '断面8', image: '/images/section8.png', dataFile: '/data/section8.js' }
+      { name: '0.63m 底基层断面1', image: '/images/section1.png', dataFile: '/data/section1.js' },
+      { name: '0.63m 底基层断面2', image: '/images/section2.png', dataFile: '/data/section2.js' },
+      { name: '0.43m 基层断面1', image: '/images/section3.png', dataFile: '/data/section3.js' },
+      { name: '0.43m 基层断面2' , image: '/images/section4.png', dataFile: '/data/section4.js' },
+      { name: '0.11m 下面层断面1', image: '/images/section5.png', dataFile: '/data/section5.js' },
+      { name: '0.11m 下面层断面2', image: '/images/section6.png', dataFile: '/data/section6.js' },
+      { name: '0.05m 上面层断面1', image: '/images/section7.png', dataFile: '/data/section7.js' },
+      { name: '0.05m 上面层断面2', image: '/images/section8.png', dataFile: '/data/section8.js' }
     ];
     const currentSectionIndex = ref(0); // 当前断面索引
     const sensorData = ref([]); // 传感器数据
@@ -178,7 +187,8 @@ export default {
       manufacturer: '',
       other: '',
       x: 0,
-      y: 0
+      y: 0,
+      image:''
     });
     const isEditMode = ref(false); // 是否处于编辑模式
     const editDialogVisible = ref(false); // 修改传感器对话框是否可见
@@ -196,7 +206,6 @@ export default {
     const loadSensorData = async (index) => {
       try {
         const response = await fetch(sections[index].dataFile);
-        console.log(sections[index].dataFile);
         const text = await response.text();
         if (text.trim() === '') {
           sensorData.value = [];
@@ -208,6 +217,13 @@ export default {
         console.error('加载传感器数据失败:', error);
         sensorData.value = [];
       }
+    };
+
+    // 获取图片
+    const getSensorImageUrl = (imageName) => {
+      const sectionImagePath = sections[currentSectionIndex.value].image;
+      const directory = sectionImagePath.substring(0, sectionImagePath.lastIndexOf('/'));
+      return `${directory}/sensor${imageName}.png`;
     };
 
     // 切换断面
@@ -262,7 +278,8 @@ export default {
         manufacturer: '',
         other: '',
         x: 0,
-        y: 0
+        y: 0,
+        image:''
       };
     };
 
@@ -329,8 +346,8 @@ export default {
       saveEditedSensor,
       hoverSensor,
       sections,
-      loadSensorData,
       switchSection,
+      getSensorImageUrl,
     };
   }
 };
@@ -381,6 +398,12 @@ export default {
 
 .sensor-info {
   text-align: left;
+}
+
+.sensor-photo {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 0px;
 }
 
 .no-sensor-selected {

@@ -35,12 +35,7 @@
           :flexible="true"
         >
           <!-- 固定“时间”列 -->
-          <el-table-column
-            prop="timestamp"
-            :label="getColumnLabel('timestamp')"
-            :min-width="getColumnWidth('timestamp')"
-            fixed
-          />
+          <el-table-column prop="timestamp" label="时间" width="180" fixed />
           <!-- 动态列 -->
           <el-table-column
             v-for="(value, key) in filteredColumns"
@@ -131,9 +126,9 @@ export default {
         console.log(trafficHourData);
         option = {
           tooltip: {
-            trigger: 'item', // 触发类型为坐标轴
+            trigger: 'item', 
             axisPointer: {
-                type: 'shadow', // 鼠标悬停时显示阴影
+                type: 'shadow', 
             },
             formatter: (params) => {
                 console.log(params);

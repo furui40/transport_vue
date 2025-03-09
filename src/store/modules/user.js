@@ -67,8 +67,8 @@ const user = {
                 const currentTime = new Date().getTime();
                 const loginTime = user.loginTime;
 
-                // 检查登录状态是否过期（30 分钟）
-                if (currentTime - loginTime <= 30 * 60 * 1000) {
+                // 检查登录状态是否过期（1440 分钟，一天）
+                if (currentTime - loginTime <= 1440 * 60 * 1000) {
                     state.isLoggedIn = user.isLoggedIn;
                     state.userInfo = user.userInfo;
                     state.userId = user.userId;
@@ -108,8 +108,8 @@ const user = {
             const currentTime = new Date().getTime();
             const loginTime = state.loginTime;
 
-            // 如果登录状态已过期（30 分钟），则登出
-            if (loginTime && currentTime - loginTime > 30 * 60 * 1000) {
+            // 如果登录状态已过期（1440 分钟），则登出
+            if (loginTime && currentTime - loginTime > 1440 * 60 * 1000) {
                 commit('logout');
                 return true; // 返回 true 表示已过期
             }

@@ -12,7 +12,7 @@
         <el-select v-model="selectedDataType" placeholder="请选择数据类型">
           <el-option label="动态称重数据" value="dynamicWeighing" />
           <el-option label="气象数据" value="weather" />
-          <!-- 可以继续添加其他数据类型的选项 -->
+          <!-- 继续添加其他数据类型的选项 -->
         </el-select>
       </div>
 
@@ -43,7 +43,7 @@
           下载
         </el-button>
         <el-button
-        type="info"
+        type="warning"
         :disabled="!tableData.length"
         @click="handleVisualize"
       >
@@ -153,7 +153,7 @@ export default {
   methods: {
     // 处理查询
     convertToLocalTime(utcTime) {
-      const date = new Date(utcTime); // 将 UTC 时间转换为 Date 对象
+      const date = new Date(utcTime); 
       return date.toLocaleString(); // 返回本地时间字符串
     },
     async handleQuery() {
@@ -161,7 +161,7 @@ export default {
         this.$message.warning('请选择时间范围');
         return;
       }
-      const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
+      const userId = this.$store.state.user.userId; 
       if (!userId) {
         this.$message.warning('用户未登录，请先登录');
         return;

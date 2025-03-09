@@ -1,6 +1,6 @@
 <template>
   <div class="welcome-container">
-    <h1>欢迎来到道路检测数据查询平台</h1>
+    <h1>欢迎来到道路监测数据查询平台</h1>
     <p v-if="!isUserLoggedIn">请登录以访问更多功能。</p>
 
     <!-- 只有当用户未登录时显示按钮 -->

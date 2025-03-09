@@ -58,8 +58,8 @@ body, html {
 /* 上方导航栏 */
 .navbar-container {
   flex-shrink: 0; /* 防止上方导航栏压缩 */
-  padding: 0 !important; /* 移除默认 padding */
-  margin: 0 !important; /* 移除默认 margin */
+  padding: 0 !important; 
+  margin: 0 !important; 
 }
 
 .main-container {
@@ -70,22 +70,22 @@ body, html {
 /* 左侧菜单栏 */
 .sidebar-container {
   flex-shrink: 0; /* 防止左侧菜单栏压缩 */
-  padding: 0 !important; /* 移除默认 padding */
-  margin: 0 !important; /* 移除默认 margin */
+  padding: 0 !important; 
+  margin: 0 !important; 
 }
 
 /* 主内容区域（用户登录时） */
 .content-container {
   flex: 1;
-  padding: 0 !important; /* 移除默认 padding */
-  margin: 0 !important; /* 移除默认 margin */
+  padding: 0 !important; 
+  margin: 0 !important; 
 }
 
 /* 主内容区域（用户未登录时，占据整个宽度） */
 .content-container-full {
   flex: 1;
-  padding: 0 !important; /* 移除默认 padding */
-  margin: 0 !important; /* 移除默认 margin */
-  width: 100%; /* 占据整个宽度 */
+  padding: 0 !important; 
+  margin: 0 !important; 
+  width: 100%; 
 }
 </style>

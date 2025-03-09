@@ -244,8 +244,8 @@ export default {
     async handleQuery() {
     // 计算时间间隔
       const timeDiff = this.stopTime - this.startTime;
-      if (timeDiff > 15) {
-        this.$confirm('当前查询间隔超过15秒，继续查询可能导致查询时间过长和图像渲染卡顿，是否继续查询？', '警告', {
+      if (timeDiff > 60) {
+        this.$confirm('当前查询间隔超过60秒，继续查询可能导致查询时间过长和图像渲染卡顿，是否继续查询？', '警告', {
           confirmButtonText: '继续查询',
           cancelButtonText: '取消查询',
           type: 'warning'
@@ -290,7 +290,16 @@ export default {
         this.$message.warning('请选择时间范围');
         return;
       }
-      const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
+      const period = this.stopTime-this.startTime;
+      if (period == 0) {
+        this.$message.warning('时间范围不能为空');
+        return;
+      }
+      if (fields.length * period / this.samplingInterval > 800) {
+        this.$message.warning('查询数据量过多，请减少查询内容或增大采样频率');
+        return;
+      }
+      const userId = this.$store.state.user.userId;
         if (!userId) {
           this.$message.warning('用户未登录，请先登录');
           return;
@@ -304,6 +313,7 @@ export default {
             startTime: this.startTime,
             stopTime: this.stopTime,
             userId,
+            samplingInterval: this.samplingInterval,
           },
         });
 
@@ -440,10 +450,11 @@ export default {
               if (!chartData[field]) {
                   chartData[field] = [];
               }
-              // 根据采样间隔选择数据点
-              if (index % this.samplingInterval === 0) {
+              // // 根据采样间隔选择数据点
+              // if (index % this.samplingInterval === 0) {
+              //     chartData[field].push([time, value]); // 存储时间和值
+              // }
                   chartData[field].push([time, value]); // 存储时间和值
-              }
           });
       });
 
@@ -479,7 +490,7 @@ export default {
 
         const option = {
           title: {
-            text: field, // 图表标题为 field 名称
+            text: this.getChineseFieldName(field), // 图表标题为 field 名称
             left: 'center',
           },
           tooltip: {

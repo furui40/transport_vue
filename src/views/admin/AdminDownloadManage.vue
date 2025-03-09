@@ -209,7 +209,7 @@ export default {
           // 直接更新表格数据
           this.selectedRows.forEach(row => {
             row.status = '审核通过'; // 更新状态
-            row.msg = ''; // 清空消息
+            row.msg = '审核通过'; // 清空消息
           });
 
           // 清空选中行

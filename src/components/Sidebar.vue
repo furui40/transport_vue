@@ -18,13 +18,13 @@
 
       <!-- 管理员页面，只有管理员角色才显示 -->
       <el-menu-item v-if="isAdmin" index="/admin" @click="goToAdminDownloadManage">
-        <el-icon><setting /></el-icon>
-        <span>管理员页面</span>
+        <el-icon><Stamp /></el-icon>
+        <span>用户下载审核</span>
       </el-menu-item>
 
       <el-menu-item v-if="!isGuest" @click="goToBaseInformation">
         <el-icon><location /></el-icon>
-        <span>传感器位置信息</span>
+        <span>传感器基本信息</span>
       </el-menu-item>
 
       <!-- 查询功能 -->
@@ -68,7 +68,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { Search,House,Document, Menu, Location, Setting } from '@element-plus/icons-vue';
+import { Search,House,Document, Menu, Location, Setting,Stamp } from '@element-plus/icons-vue';
 
 // 使用 Vuex 和 Router
 const store = useStore();

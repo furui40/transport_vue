@@ -1,5 +1,6 @@
 const state = {
     columnWidthMap: {
+        timestamp: '180',
         weightKg: '120',
         vehicleLength: '120',
         lane: '80',
