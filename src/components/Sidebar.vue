@@ -140,7 +140,7 @@ const handleClose = (key, keyPath) => {
 .left-menu {
   background-color: #545c64;
   padding: 0;
-  height: 120vh;
+  height: 90vh;
   border-right: 1px solid #ddd;
   position: sticky; /* 使导航栏在滚动时跟随 */
   top: 0; /* 固定在顶部 */

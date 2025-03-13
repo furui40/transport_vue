@@ -1,3 +1,4 @@
+<!-- WeightVisualize.vue -->
 <template>
   <div class="weight-visualize">
     <div class="container">
@@ -26,22 +27,8 @@
             />
           </el-select>
           <el-button type="primary" @click="renderColumnPieChart">
-            自定义饼状图
+            绘制饼状图
           </el-button>
-          <span>取值范围为 {{ columnStats.min }}-{{ columnStats.max }}</span>
-        </div>
-
-        <!-- 区间配置输入区域 -->
-        <div class="range-config" v-if="selectedColumn && data.length > 0">
-          <div v-for="(range, index) in customRanges" :key="index" class="range-input">
-            <el-input v-model="range.min" placeholder="最小值" style="width: 100px;"></el-input>
-            <span> - </span>
-            <el-input v-model="range.max" placeholder="最大值" style="width: 100px;"></el-input>
-            <el-button type="danger" @click="removeRange(index)" :disabled="customRanges.length === 1">
-              删除
-            </el-button>
-          </div>
-          <el-button type="primary" @click="addRange">添加区间</el-button>
         </div>
 
         <div class="chart-container">
@@ -61,7 +48,6 @@
 <script>
 import { mapGetters } from 'vuex';
 import * as echarts from 'echarts';
-import { calculateColumnStats, renderColumnPieChart } from '@/utils/visualizeutils';
 
 export default {
   props: {
@@ -76,8 +62,6 @@ export default {
       currentChart: '', // 当前显示的图表类型
       selectedColumn: '', // 当前选择的列
       availableColumns: [], // 可选的列名
-      customRanges: [{ min: null, max: null }], // 自定义区间
-      columnStats: { min: null, max: null }, // 列的最小值和最大值
       stats: {
         totalVehicles: 0,
         averageWeight: 0,
@@ -118,29 +102,77 @@ export default {
     // 处理列选择变化
     handleColumnChange() {
       this.currentChart = 'columnPieChart';
-      this.customRanges = [{ min: null, max: null }]; // 重置区间配置
-      this.columnStats = calculateColumnStats(this.data, this.selectedColumn); // 计算列的最小值和最大值
-    },
-
-    // 添加区间
-    addRange() {
-      this.customRanges.push({ min: null, max: null });
-    },
-
-    // 删除区间
-    removeRange(index) {
-      if (this.customRanges.length > 1) {
-        this.customRanges.splice(index, 1);
-      }
+      this.renderColumnPieChart();
     },
 
     // 渲染列饼状图
     renderColumnPieChart() {
-      try {
-        renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges);
-      } catch (error) {
-        this.$message.warning(error.message);
+      if (!this.selectedColumn || this.data.length === 0) {
+        this.$message.warning('请选择列或确保数据存在');
+        return;
       }
+
+      if (this.chartInstance) {
+        this.chartInstance.dispose(); // 销毁之前的图表
+      }
+      const chartDom = this.$refs.chart;
+      this.chartInstance = echarts.init(chartDom);
+
+      const columnData = this.data.map((item) => item[this.selectedColumn]);
+      const min = Math.min(...columnData);
+      const max = Math.ceil(Math.max(...columnData)); // 向上取整
+      const range = (max - min) / 5; // 将数据分成 5 个区间
+
+      const ranges = [
+        { min: min, max: min + range, label: `[${min}, ${(min + range).toFixed(2)})` },
+        { min: min + range, max: min + 2 * range, label: `[${(min + range).toFixed(2)}, ${(min + 2 * range).toFixed(2)})` },
+        { min: min + 2 * range, max: min + 3 * range, label: `[${(min + 2 * range).toFixed(2)}, ${(min + 3 * range).toFixed(2)})` },
+        { min: min + 3 * range, max: min + 4 * range, label: `[${(min + 3 * range).toFixed(2)}, ${(min + 4 * range).toFixed(2)})` },
+        { min: min + 4 * range, max: max + 1, label: `[${(min + 4 * range).toFixed(2)}, ${max}]` },
+      ];
+
+      const count = ranges.map(() => 0);
+      columnData.forEach((value) => {
+        ranges.forEach((range, index) => {
+          if (value >= range.min && value < range.max) { // 左闭右开
+            count[index]++;
+          }
+        });
+      });
+
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: (params) => {
+            const { name, value, percent } = params;
+            return `${name}: ${value} 辆 (${percent}%)`;
+          },
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'left',
+        },
+        series: [
+          {
+            name: this.selectedColumn,
+            type: 'pie',
+            radius: '50%',
+            data: ranges.map((range, index) => ({
+              name: range.label,
+              value: count[index],
+            })),
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
+            },
+          },
+        ],
+      };
+
+      this.chartInstance.setOption(option);
     },
 
     // 渲染图表
@@ -370,26 +402,10 @@ export default {
 .column-selector {
   display: flex;
   gap: 10px;
-  margin-bottom: 0px;
+  margin-bottom: 20px;
 }
 
 .column-selector .el-select {
   width: 200px; /* 宽度自适应 */
-}
-
-.column-stats {
-  margin-bottom: 10px;
-}
-
-.range-config {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.range-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 </style>

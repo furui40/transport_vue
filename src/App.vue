@@ -47,45 +47,49 @@ export default {
 body, html {
   margin: 0;
   padding: 0;
+  height: 100%; /* 确保 body 和 html 占满视口 */
 }
 
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh; /* 占满视口高度 */
 }
 
 /* 上方导航栏 */
 .navbar-container {
   flex-shrink: 0; /* 防止上方导航栏压缩 */
-  padding: 0 !important; 
-  margin: 0 !important; 
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .main-container {
   display: flex;
   flex: 1;
+  overflow: hidden; /* 防止主内容区域生成滚动条 */
 }
 
 /* 左侧菜单栏 */
 .sidebar-container {
   flex-shrink: 0; /* 防止左侧菜单栏压缩 */
-  padding: 0 !important; 
-  margin: 0 !important; 
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* 主内容区域（用户登录时） */
 .content-container {
   flex: 1;
-  padding: 0 !important; 
-  margin: 0 !important; 
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-y: auto; /* 启用滚动条 */
 }
 
 /* 主内容区域（用户未登录时，占据整个宽度） */
 .content-container-full {
   flex: 1;
-  padding: 0 !important; 
-  margin: 0 !important; 
-  width: 100%; 
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+  overflow-y: auto; /* 启用滚动条 */
 }
 </style>

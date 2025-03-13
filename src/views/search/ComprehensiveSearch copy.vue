@@ -108,7 +108,7 @@ export default {
       stopTime: null, // 结束时间
       tableData: [], // 表格数据
       currentPage: 1, // 当前页码
-      pageSize: 12, // 每页显示的行数
+      pageSize: 10, // 每页显示的行数
     };
   },
   watch: {
@@ -250,15 +250,14 @@ export default {
 
 <style scoped>
 .comprehensive-search-and-visualize {
-  padding: 10px;
+  padding: 20px;
   text-align: center; /* 整体居中 */
 }
 
 /* 标题样式 */
 .title h2 {
-  font-weight: bold; 
-  margin-top: 0px;
-  margin-bottom: 10px; 
+  font-weight: bold; /* 加粗 */
+  margin-bottom: 20px; /* 与下方内容保持间距 */
 }
 
 /* 查询控件容器 */
