@@ -25,10 +25,10 @@
               :value="column"
             />
           </el-select>
-          <el-button type="primary" @click="renderColumnPieChart">
-            自定义饼状图
-          </el-button>
-          <span>取值范围为 {{ columnStats.min }}-{{ columnStats.max }}</span>
+          <el-button type="primary" @click="renderColumnPieChart">饼状图</el-button>
+          <el-button type="success" @click="renderColumnBarChart">柱状图</el-button>
+          <el-button type="warning" @click="renderColumnLineChart">折线图</el-button>
+          <span class="column-range">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
         </div>
 
         <!-- 区间配置输入区域 -->
@@ -61,7 +61,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import * as echarts from 'echarts';
-import { calculateColumnStats, renderColumnPieChart } from '@/utils/visualizeutils';
+import { calculateColumnStats, renderColumnPieChart, renderColumnBarChart, renderColumnLineChart } from '@/utils/visualizeutils';
 
 export default {
   props: {
@@ -137,12 +137,28 @@ export default {
     // 渲染列饼状图
     renderColumnPieChart() {
       try {
-        renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges);
+        renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+      } catch (error) {
+        this.$message.warning(error.message);
+      }
+    },
+    // 渲染柱状图
+    renderColumnBarChart() {
+      try {
+        renderColumnBarChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
       } catch (error) {
         this.$message.warning(error.message);
       }
     },
 
+    // 渲染折线图
+    renderColumnLineChart() {
+      try {
+        renderColumnLineChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+      } catch (error) {
+        this.$message.warning(error.message);
+      }
+    },
     // 渲染图表
     renderChart(type) {
       this.currentChart = type;
@@ -332,24 +348,24 @@ export default {
 
 <style scoped>
 .weight-visualize {
-  padding: 20px;
+  padding: 10px;
 }
 
 .container {
   display: flex;
-  gap: 20px;
+  gap: 10px;
 }
 
 .left-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .button-group {
   display: flex;
-  gap: 10px;
+  gap: 0px;
 }
 
 .chart-container {
@@ -369,12 +385,28 @@ export default {
 
 .column-selector {
   display: flex;
-  gap: 10px;
-  margin-bottom: 0px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px; 
 }
 
-.column-selector .el-select {
-  width: 200px; /* 宽度自适应 */
+.column-selector > * {
+  flex: 1; 
+}
+
+.column-selector > .el-select {
+  flex: 2; 
+}
+
+.column-selector > .el-button {
+  flex: 1; 
+}
+
+.column-selector > .column-range {
+  flex: 2; 
+  text-align: right; 
+  font-size: 14px;
+  color: #666;
 }
 
 .column-stats {
@@ -390,6 +422,6 @@ export default {
 .range-input {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 </style>

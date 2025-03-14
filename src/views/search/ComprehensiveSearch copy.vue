@@ -94,11 +94,13 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import WeightVisualize from '../visualize/WeightVisualize.vue';
+import WeatherVisualize from '../visualize/WeatherVisualize.vue';
 import DefaultVisualize from '../visualize/Default.vue';
 
 export default {
   components: {
     WeightVisualize,
+    WeatherVisualize,
     DefaultVisualize,
   },
   data() {
@@ -108,7 +110,7 @@ export default {
       stopTime: null, // 结束时间
       tableData: [], // 表格数据
       currentPage: 1, // 当前页码
-      pageSize: 10, // 每页显示的行数
+      pageSize: 12, // 每页显示的行数
     };
   },
   watch: {
@@ -125,10 +127,12 @@ export default {
     filteredColumns() {
       if (this.tableData.length === 0) return {};
       const firstRow = this.tableData[0];
-      const excludedFields =
-        this.selectedDataType === 'dynamicWeighing'
-          ? ['id', 'timestamp'] // 动态称重数据排除 id 和 timestamp
-          : ['timestamp']; // 气象数据排除 timestamp
+      let excludedFields = [];
+      if (this.selectedDataType === 'dynamicWeighing') {
+        excludedFields = ['id', 'timestamp'];
+      } else if (this.selectedDataType === 'weather') {  
+        excludedFields = ['timestamp'];
+      }
       return Object.keys(firstRow)
         .filter(key => !excludedFields.includes(key))
         .reduce((obj, key) => {
@@ -146,6 +150,8 @@ export default {
     currentVisualizationComponent() {
       if (this.selectedDataType === 'dynamicWeighing') {
         return 'WeightVisualize';
+      }else if (this.selectedDataType === 'weather') {
+        return 'WeatherVisualize';
       }
       return 'DefaultVisualize';
     },
@@ -250,14 +256,15 @@ export default {
 
 <style scoped>
 .comprehensive-search-and-visualize {
-  padding: 20px;
+  padding: 10px;
   text-align: center; /* 整体居中 */
 }
 
 /* 标题样式 */
 .title h2 {
-  font-weight: bold; /* 加粗 */
-  margin-bottom: 20px; /* 与下方内容保持间距 */
+  font-weight: bold; 
+  margin-top: 0px;
+  margin-bottom: 10px; 
 }
 
 /* 查询控件容器 */
@@ -294,12 +301,12 @@ export default {
 
 /* 可视化面板 */
 .visualize-panel {
-  flex: 1;
+  flex: 2;
 }
 
 /* 表格面板样式 */
 .table-panel {
-  flex: 2;
+  flex: 3;
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 200px); /* 动态计算高度 */
