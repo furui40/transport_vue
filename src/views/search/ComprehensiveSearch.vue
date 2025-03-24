@@ -12,12 +12,15 @@
         <el-select v-model="selectedDataType" placeholder="请选择数据类型">
           <el-option label="动态称重数据" value="dynamicWeighing" />
           <el-option label="气象数据" value="weather" />
-          <el-option label="沉降数据" value="subside" />
+          <el-option label="沉降数据(mm)" value="subside" />
+          <el-option label="孔隙水压力(Mpa)" value="waterPressure" />
+          <el-option label="温湿度(℃,%RH)" value="humiture" />
         </el-select>
       </div>
 
       <!-- 测点选择按钮 -->
-      <div class="point-select-button" v-if="selectedDataType === 'subside'">
+      <div class="point-select-button" 
+           v-if="['subside', 'waterPressure', 'humiture'].includes(selectedDataType)">
         <el-button type="primary" @click="showPointDialog = true">选择测点</el-button>
       </div>
 
@@ -59,7 +62,7 @@
       <!-- 测点表格 -->
       <el-table
         ref="pointTable"
-        :data="subsidePoints"
+        :data="currentPoints"
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
@@ -123,139 +126,206 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import WeightVisualize from '../visualize/WeightVisualize.vue';
 import WeatherVisualize from '../visualize/WeatherVisualize.vue';
+import SubsideVisualize from '../visualize/SubsideVisualize.vue';
 import DefaultVisualize from '../visualize/Default.vue';
 
 export default {
   components: {
     WeightVisualize,
     WeatherVisualize,
+    SubsideVisualize,
     DefaultVisualize,
   },
   data() {
+    // 生成测点数据
+    const generatePoints = (prefix, start, end) => 
+      Array.from({ length: end - start + 1 }, (_, i) => ({
+        id: `${prefix}-${String(start + i).padStart(2, '0')}`
+      }));
+
     return {
-      selectedDataType: 'dynamicWeighing', // 默认选择动态称重数据
-      startTime: null, // 开始时间
-      stopTime: null, // 结束时间
-      tableData: [], // 表格数据
-      currentPage: 1, // 当前页码
-      pageSize: 12, // 每页显示的行数
-      subsidePoints: Array.from({ length: 15 }, (_, i) => ({ id: `0034230033-${String(i + 1).padStart(2, '0')}` })), // 沉降测点
-      selectedPoints: [], // 选中的测点
-      showPointDialog: false, // 是否显示测点选择弹窗
+      selectedDataType: 'dynamicWeighing',
+      startTime: null,
+      stopTime: null,
+      tableData: [],
+      currentPage: 1,
+      pageSize: 12,
+      selectedPoints: [],
+      showPointDialog: false,
+      
+      // 测点数据
+      subsidePoints: generatePoints('0034230033', 1, 15),
+      waterPressurePoints: [
+        ...generatePoints('0034230583', 1, 9),
+        ...generatePoints('0034230610', 1, 20)
+      ],
+      humiturePoints: [
+        ...generatePoints('0034230034', 1, 16),
+        ...generatePoints('0034230583', 10, 18),
+        ...generatePoints('0034230607', 1, 20)
+      ]
     };
   },
   watch: {
     selectedDataType() {
-      // 清空表格数据
       this.tableData = [];
-      // 重置分页
       this.currentPage = 1;
+      this.selectedPoints = [];
     },
   },
   computed: {
-    ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']), // 映射 Vuex 的 getters
-    // 过滤掉不需要的字段
+    ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']),
+    currentPoints() {
+      switch (this.selectedDataType) {
+        case 'subside': return this.subsidePoints;
+        case 'waterPressure': return this.waterPressurePoints;
+        case 'humiture': return this.humiturePoints;
+        default: return [];
+      }
+    },
     filteredColumns() {
       if (this.tableData.length === 0) return {};
-      const firstRow = this.tableData[0];
-      let excludedFields = [];
-      if (this.selectedDataType === 'dynamicWeighing') {
-        excludedFields = ['id', 'timestamp'];
-      } else if (this.selectedDataType === 'weather') {  
-        excludedFields = ['timestamp'];
-      }else if (this.selectedDataType === 'subside') {  
-        excludedFields = ['timestamp'];
-      }
-      return Object.keys(firstRow)
-        .filter(key => !excludedFields.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = firstRow[key];
-          return obj;
-        }, {});
+      if (!['subside', 'waterPressure', 'humiture'].includes(this.selectedDataType)) {
+      const dynamicColumns = new Set();
+      this.tableData.forEach(item => {
+        Object.keys(item).forEach(key => {
+           if (key !== 'timestamp') dynamicColumns.add(key);
+        });
+      });
+      return Array.from(dynamicColumns).reduce((acc, key) => {
+        acc[key] = true;
+         return acc;
+       }, {});
+     }else{
+      // 根据选择的测点生成预期间列名
+      const expectedColumns = new Set();
+      
+      this.selectedPoints.forEach(point => {
+        if (this.selectedDataType === 'humiture') {
+          // 温湿度每个测点需要拆分为两个字段
+          expectedColumns.add(`${point}_w`);
+          expectedColumns.add(`${point}_t`);
+        } else {
+          // 沉降/孔隙水压力直接使用测点ID
+          expectedColumns.add(point);
+        }
+      });
+
+      // 合并实际存在的列（防止数据缺失导致的空白列）
+      const actualColumns = new Set();
+      this.tableData.forEach(item => {
+        Object.keys(item).forEach(key => {
+          if (key !== 'timestamp') actualColumns.add(key);
+        });
+      });
+
+      // 取交集确保只显示期望且存在的列
+      const finalColumns = new Set(
+        [...expectedColumns].filter(col => actualColumns.has(col))
+      );
+
+      return Array.from(finalColumns).reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {});
+     }
     },
-    // 分页后的数据
     paginatedData() {
       const start = (this.currentPage - 1) * this.pageSize;
-      const end = start + this.pageSize;
-      return this.tableData.slice(start, end);
+      return this.tableData.slice(start, start + this.pageSize);
     },
-    // 当前可视化组件
     currentVisualizationComponent() {
-      if (this.selectedDataType === 'dynamicWeighing') {
-        return 'WeightVisualize';
-      }else if (this.selectedDataType === 'weather') {
-        return 'WeatherVisualize';
-      }
-      return 'DefaultVisualize';
-    },
+      const visualComponents = {
+        dynamicWeighing: 'WeightVisualize',
+        weather: 'WeatherVisualize',
+        subside: 'SubsideVisualize',
+        waterPressure: 'SubsideVisualize',
+        humiture: 'SubsideVisualize'
+      };
+      return visualComponents[this.selectedDataType] || 'DefaultVisualize';
+    }
   },
   methods: {
-    // 处理表格选择变化
     handleSelectionChange(selection) {
       this.selectedPoints = selection.map(point => point.id);
     },
-    // 处理测点确认
     handlePointConfirm() {
       this.showPointDialog = false;
     },
-    // 处理查询
     convertToLocalTime(utcTime) {
-      const date = new Date(utcTime); 
-      return date.toLocaleString(); // 返回本地时间字符串
+      return new Date(utcTime).toLocaleString();
     },
     async handleQuery() {
       if (!this.startTime || !this.stopTime) {
         this.$message.warning('请选择时间范围');
         return;
       }
-      const userId = this.$store.state.user.userId; 
+      if (['subside', 'waterPressure', 'humiture'].includes(this.selectedDataType)) {
+        if (this.selectedPoints.length === 0) {
+          this.$message.warning('请至少选择一个测点');
+          return;
+        }
+        if(this.stopTime-this.startTime <= 0){
+          this.$message.warning('结束时间需大于开始时间');
+          return;
+        }
+      }
+
+      const userId = this.$store.state.user.userId;
       if (!userId) {
         this.$message.warning('用户未登录，请先登录');
         return;
       }
+
       try {
-        const baseURL = 'http://localhost:8080';
-        let apiEndpoint = '';
-        let params = {
+        const endpoints = {
+          dynamicWeighing: '/search/dynamicWeighing',
+          weather: '/search/weather',
+          subside: '/search/subside',
+          waterPressure: '/search/waterPressure',
+          humiture: '/search/humiture'
+        };
+
+        const params = {
           startTime: this.startTime,
           stopTime: this.stopTime,
           userId,
+          ...(['subside', 'waterPressure', 'humiture'].includes(this.selectedDataType) && {
+            fields: this.selectedPoints.join(',')
+          })
         };
 
-        if (this.selectedDataType === 'dynamicWeighing') {
-          apiEndpoint = '/search/dynamicWeighing';
-        } else if (this.selectedDataType === 'weather') {
-          apiEndpoint = '/search/weather';
-        } else if (this.selectedDataType === 'subside') {
-          apiEndpoint = '/search/subside';
-          params.fields = this.selectedPoints.join(','); // 拼接测点ID
-        }
-
-        const response = await axios.post(`${baseURL}${apiEndpoint}`, null, { params });
+        const response = await axios.post(
+          `http://localhost:8080${endpoints[this.selectedDataType]}`,
+          null,
+          { params }
+        );
 
         if (response.data.code === 200) {
-          const subsideSensorColumns = Array.from({ length: 15 }, (_, i) => `0034230033-${String(i + 1).padStart(2, '0')}`);
-
           this.tableData = response.data.data.map(item => {
-            const formattedItem = {
+            const formatted = {
               ...item,
-              timestamp: this.convertToLocalTime(item.timestamp), // 转换时间
+              timestamp: this.convertToLocalTime(item.timestamp)
             };
-            if (this.selectedDataType === 'dynamicWeighing') {
-              formattedItem.id = item.id; // 动态称重数据包含 id
-            }
+
             if (item.fieldValues) {
-              // 对 fieldValues 的键进行排序
-              subsideSensorColumns.forEach(key => {
-                formattedItem[key] = item.fieldValues[key] || null; // 如果数据缺失，填充为 null
-              });
-              // 沉降数据删除 fieldValues 列
-              delete formattedItem.fieldValues;
-            }
-            return formattedItem;
-          });
-          this.tableData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-          this.currentPage = 1; // 查询成功后重置到第一页
+                Object.entries(item.fieldValues).forEach(([fieldKey, value]) => {
+                  if (['subside', 'waterPressure'].includes(this.selectedDataType)) {
+                    formatted[fieldKey] = value;
+                  } else if (this.selectedDataType === 'humiture') {
+                    const [baseId, fieldType] = fieldKey.split('_');
+                    formatted[`${baseId}_${fieldType}`] = value;
+                  }
+                });
+
+                delete item.fieldValues;
+                delete formatted.fieldValues;
+              }
+
+            return Object.assign({}, item, formatted);
+          }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+          this.currentPage = 1;
           this.$message.success('查询成功');
         } else {
           this.$message.error('查询失败: ' + response.data.message);
@@ -264,55 +334,46 @@ export default {
         this.$message.error('查询失败: ' + error.message);
       }
     },
-
-    // 处理下载
     handleDownload() {
-      if (this.tableData.length === 0) {
+      if (!this.tableData.length) {
         this.$message.warning('没有数据可下载');
         return;
       }
 
-      // 将列名替换为中文
-      const chineseData = this.tableData.map(item => {
-        const newItem = {};
-        Object.keys(item).forEach(key => {
-          const chineseKey = this.getColumnLabel(key);
-          newItem[chineseKey] = item[key];
-        });
-        return newItem;
-      });
+      const sheetNames = {
+        dynamicWeighing: '动态称重数据',
+        weather: '气象数据',
+        subside: '沉降数据',
+        waterPressure: '孔隙水压力数据',
+        humiture: '温湿度数据'
+      };
 
-      // 创建工作表
-      const worksheet = XLSX.utils.json_to_sheet(chineseData);
-      // 创建工作簿
+      const worksheet = XLSX.utils.json_to_sheet(
+        this.tableData.map(item => {
+          const translated = {};
+          Object.keys(item).forEach(key => {
+            translated[this.getColumnLabel(key)] = item[key];
+          });
+          return translated;
+        })
+      );
+
       const workbook = XLSX.utils.book_new();
-      let sheetName = '数据';
-      if (this.selectedDataType === 'dynamicWeighing') {
-        sheetName = '动态称重数据';
-      } else if (this.selectedDataType === 'weather') {
-        sheetName = '气象数据';
-      } else if (this.selectedDataType === 'subside') {
-        sheetName = '沉降数据';
-      }
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        sheetNames[this.selectedDataType] || '数据'
+      );
 
-      // 导出 Excel 文件
-      let fileName = '数据.xlsx';
-      if (this.selectedDataType === 'dynamicWeighing') {
-        fileName = '动态称重数据.xlsx';
-      } else if (this.selectedDataType === 'weather') {
-        fileName = '气象数据.xlsx';
-      } else if (this.selectedDataType === 'subside') {
-        fileName = '沉降数据.xlsx';
-      }
-      XLSX.writeFile(workbook, fileName);
+      XLSX.writeFile(
+        workbook,
+        `${sheetNames[this.selectedDataType] || '数据'}.xlsx`
+      );
     },
-
-    // 处理分页变化
     handlePageChange(page) {
       this.currentPage = page;
-    },
-  },
+    }
+  }
 };
 </script>
 

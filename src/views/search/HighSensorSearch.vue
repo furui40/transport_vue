@@ -291,8 +291,8 @@ export default {
         return;
       }
       const period = this.stopTime-this.startTime;
-      if (period == 0) {
-        this.$message.warning('时间范围不能为空');
+      if (period < 0) {
+        this.$message.warning('时间范围选择错误');
         return;
       }
       if (fields.length * period / this.samplingInterval > 800) {

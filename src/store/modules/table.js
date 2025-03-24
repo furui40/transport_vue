@@ -110,6 +110,7 @@ const state = {
         status: '状态',
         userEmail: '用户邮箱',
         msg: '附加信息',
+        wet: '湿度',
     },
 };
 
@@ -118,6 +119,11 @@ const getters = {
         return state.columnWidthMap[key] || '150'; // 默认宽度为 150
     },
     getColumnLabel: (state) => (key) => {
+        if (key.includes('_')) {
+            const [baseId, fieldType] = key.split('_');
+            const typeMap = { w: '温度', t: '湿度' };
+            return `${baseId}${typeMap[fieldType] || ''}`;
+        }
         return state.columnLabelMap[key] || key; // 如果没有找到对应映射，返回字段名
     },
 };

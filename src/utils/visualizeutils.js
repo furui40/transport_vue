@@ -10,10 +10,13 @@ export function calculateColumnStats(data, column) {
     if (!data || data.length === 0 || !column) {
         return { min: null, max: null };
     }
-    const columnData = data.map((item) => item[column]);
+    const columnData = data
+        .map((item) => item[column])
+        .filter((value) => value != null && value >= 1); // 忽略小于 1 的值
+
     return {
-        min: Math.min(...columnData),
-        max: Math.max(...columnData),
+        min: columnData.length > 0 ? Math.min(...columnData) : null, // 如果没有有效值，返回 null
+        max: columnData.length > 0 ? Math.max(...columnData) : null,
     };
 }
 
