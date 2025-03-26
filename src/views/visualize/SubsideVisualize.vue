@@ -19,18 +19,11 @@
 
         <!-- 列选择器和绘制按钮 -->
         <div class="column-selector" v-if="data.length > 0">
-          <el-select v-model="selectedColumn" placeholder="请选择列" @change="handleColumnChange">
-            <el-option
-              v-for="column in availableColumns"
-              :key="column"
-              :label="this.getColumnLabel(column)"
-              :value="column"
-            />
-          </el-select>
+          <span class="text">自定义图表</span>
           <el-button type="primary" @click="renderColumnPieChart">饼状图</el-button>
           <el-button type="success" @click="renderColumnBarChart">柱状图</el-button>
           <el-button type="warning" @click="renderColumnLineChart">折线图</el-button>
-          <span class="column-range">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
+          <span class="text">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
         </div>
 
         <!-- 区间配置输入区域 -->
@@ -75,16 +68,16 @@ export default {
   },
   data() {
     return {
-      chartInstance: null, // ECharts 实例
-      currentChart: '', // 当前显示的图表类型
-      selectedColumn: '', // 当前选择的列
-      availableColumns: [], // 可选的列名
-      customRanges: [{ min: null, max: null }], // 自定义区间
-      columnStats: { min: null, max: null }, // 列的最小值和最大值
+      chartInstance: null,
+      currentChart: '',
+      selectedColumn: '',
+      availableColumns: [],
+      customRanges: [{ min: null, max: null }],
+      columnStats: { min: null, max: null },
     };
   },
   computed: {
-    ...mapGetters('table', ['getColumnLabel']), // 从 Vuex 获取列名映射
+    ...mapGetters('table', ['getColumnLabel']),
   },
   watch: {
     data: {
@@ -98,20 +91,35 @@ export default {
     this.updateAvailableColumns();
   },
   methods: {
-    // 更新可选的列名
+    // 清理当前图表
+    clearChart() {
+      if (this.chartInstance) {
+        this.chartInstance.dispose();
+        this.chartInstance = null;
+      }
+      if (this.$refs.chart) {
+        this.$refs.chart.innerHTML = '';
+      }
+    },
+
+    // 准备图表容器
+    prepareChartContainer() {
+      this.clearChart();
+      this.$refs.chart.innerHTML = '<div class="chart-content" style="width:100%;height:100%;"></div>';
+      return this.$refs.chart.querySelector('.chart-content');
+    },
+
     updateAvailableColumns() {
       if (this.data.length > 0) {
         const firstRow = this.data[0];
         this.availableColumns = Object.keys(firstRow)
-          .filter(key => typeof firstRow[key] === 'number') // 只选择数值类型的列
+          .filter(key => typeof firstRow[key] === 'number')
           .sort((a, b) => {
-            // 温湿度数据特殊排序（按测点分组）
             if (a.includes('_') && b.includes('_')) {
               const [aBase, aType] = a.split('_');
               const [bBase, bType] = b.split('_');
               return aBase.localeCompare(bBase) || aType.localeCompare(bType);
             }
-            // 普通测点直接排序
             return a.localeCompare(b);
           });
       } else {
@@ -119,19 +127,16 @@ export default {
       }
     },
 
-    // 处理列选择变化
     handleColumnChange() {
       this.currentChart = 'columnPieChart';
-      this.customRanges = [{ min: null, max: null }]; // 重置区间配置
-      this.columnStats = calculateColumnStats(this.data, this.selectedColumn); // 计算列的最小值和最大值
+      this.customRanges = [{ min: null, max: null }];
+      this.columnStats = calculateColumnStats(this.data, this.selectedColumn);
     },
 
-    // 添加区间
     addRange() {
       this.customRanges.push({ min: null, max: null });
     },
 
-    // 删除区间
     removeRange(index) {
       if (this.customRanges.length > 1) {
         this.customRanges.splice(index, 1);
@@ -141,7 +146,15 @@ export default {
     // 渲染自定义饼状图
     renderColumnPieChart() {
       try {
-        renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+        const chartContainer = this.prepareChartContainer();
+        renderColumnPieChart(
+          chartContainer,
+          this.data,
+          this.selectedColumn,
+          this.customRanges,
+          this.getColumnLabel
+        );
+        this.currentChart = 'pieChart';
       } catch (error) {
         this.$message.warning(error.message);
       }
@@ -150,7 +163,15 @@ export default {
     // 渲染柱状图
     renderColumnBarChart() {
       try {
-        renderColumnBarChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+        const chartContainer = this.prepareChartContainer();
+        renderColumnBarChart(
+          chartContainer,
+          this.data,
+          this.selectedColumn,
+          this.customRanges,
+          this.getColumnLabel
+        );
+        this.currentChart = 'barChart';
       } catch (error) {
         this.$message.warning(error.message);
       }
@@ -159,7 +180,15 @@ export default {
     // 渲染折线图
     renderColumnLineChart() {
       try {
-        renderColumnLineChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+        const chartContainer = this.prepareChartContainer();
+        renderColumnLineChart(
+          chartContainer,
+          this.data,
+          this.selectedColumn,
+          this.customRanges,
+          this.getColumnLabel
+        );
+        this.currentChart = 'lineChart';
       } catch (error) {
         this.$message.warning(error.message);
       }
@@ -168,7 +197,14 @@ export default {
     // 按数据点绘制折线图
     renderLineChartByDataPoints() {
       try {
-        renderLineChartByDataPoints(this.$refs.chart, this.data, this.selectedColumn, this.getColumnLabel);
+        const chartContainer = this.prepareChartContainer();
+        renderLineChartByDataPoints(
+          chartContainer,
+          this.data,
+          this.selectedColumn,
+          this.getColumnLabel
+        );
+        this.currentChart = 'lineChartByPoints';
       } catch (error) {
         this.$message.warning(error.message);
       }
@@ -177,11 +213,21 @@ export default {
     // 按小时绘制折线图
     renderLineChartByHour() {
       try {
-        renderLineChartByHour(this.$refs.chart, this.data, this.selectedColumn, this.getColumnLabel);
+        const chartContainer = this.prepareChartContainer();
+        renderLineChartByHour(
+          chartContainer,
+          this.data,
+          this.selectedColumn,
+          this.getColumnLabel
+        );
+        this.currentChart = 'lineChartByHour';
       } catch (error) {
         this.$message.warning(error.message);
       }
     },
+  },
+  beforeDestroy() {
+    this.clearChart();
   },
 };
 </script>
@@ -217,21 +263,12 @@ export default {
   gap: 4px;
 }
 
-.column-selector > * {
-  flex: 1;
-}
-
-.column-selector > .el-select {
-  flex: 2;
-}
-
 .column-selector > .el-button {
   flex: 1;
 }
 
-.column-selector > .column-range {
+.column-selector > .text {
   flex: 2;
-  text-align: right;
   font-size: 14px;
   color: #666;
 }

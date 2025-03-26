@@ -82,7 +82,11 @@
     <div class="query-result-and-visualize">
       <!-- 左半部分：可视化 -->
       <div class="visualize-panel">
-        <component :is="currentVisualizationComponent" :data="tableData" />
+        <component 
+          :is="currentVisualizationComponent" 
+          :data="tableData"
+          :key="selectedDataType" 
+        />
       </div>
 
       <!-- 右半部分：表格展示 -->

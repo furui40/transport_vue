@@ -19,18 +19,11 @@
 
         <!-- 列选择器和绘制按钮 -->
         <div class="column-selector" v-if="data.length > 0">
-          <el-select v-model="selectedColumn" placeholder="请选择列" @change="handleColumnChange">
-            <el-option
-              v-for="column in availableColumns"
-              :key="column"
-              :label="this.getColumnLabel(column)"
-              :value="column"
-            />
-          </el-select>
+          <span class="text">自定义图表</span>
           <el-button type="primary" @click="renderColumnPieChart">饼状图</el-button>
           <el-button type="success" @click="renderColumnBarChart">柱状图</el-button>
           <el-button type="warning" @click="renderColumnLineChart">折线图</el-button>
-          <span class="column-range">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
+          <span class="text">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
         </div>
 
         <!-- 区间配置输入区域 -->
@@ -208,21 +201,12 @@ export default {
   gap: 4px;
 }
 
-.column-selector > * {
-  flex: 1;
-}
-
-.column-selector > .el-select {
-  flex: 2;
-}
-
 .column-selector > .el-button {
   flex: 1;
 }
 
-.column-selector > .column-range {
+.column-selector > .text {
   flex: 2;
-  text-align: right;
   font-size: 14px;
   color: #666;
 }

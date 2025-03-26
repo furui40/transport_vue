@@ -254,52 +254,65 @@ export function renderLineChartByDataPoints(chartDom, data, selectedColumn, getC
 
     // 格式化时间戳
     const xAxisData = data.map((item) => formatTimestamp(item.timestamp));
-    const yAxisData = data.map((item) => item[selectedColumn]);
+    // 过滤无效数据点
+    const yAxisData = data.map((item) => {
+        const value = item[selectedColumn];
+        return (value === null || value === undefined || isNaN(value)) ? null : value;
+    });
 
-    // 计算纵轴范围
-    const minValue = Math.min(...yAxisData);
-    const maxValue = Math.max(...yAxisData);
-    const padding = (maxValue - minValue) * 0.1; // 增加 10% 的间距
+    // 计算有效数据点
+    const validData = yAxisData.filter(val => val !== null);
+
+    // 设置默认纵轴范围（当没有有效数据时）
+    let minValue = 0;
+    let maxValue = 10;
+    let padding = 1;
+
+    if (validData.length > 0) {
+        minValue = Math.min(...validData);
+        maxValue = Math.max(...validData);
+        padding = (maxValue - minValue) * 0.1; // 增加10%的间距
+    }
 
     const option = {
         tooltip: {
             trigger: 'axis',
             formatter: (params) => {
                 const { dataIndex } = params[0];
-                const timestamp = xAxisData[dataIndex]; // 获取格式化后的时间戳
-                const value = yAxisData[dataIndex]; // 获取数值
-                return `${timestamp}, ${value}`; // 返回格式如 "7.12 10:30, 26.3℃"
+                const timestamp = xAxisData[dataIndex];
+                const value = yAxisData[dataIndex];
+                return `${timestamp}, ${value !== null ? value : '无数据'}`;
             },
         },
         xAxis: {
             type: 'category',
             data: xAxisData,
-            boundaryGap: false, // 不留空白
+            boundaryGap: false,
             axisLabel: {
-                rotate: 45, // 旋转标签以避免重叠
+                rotate: 45,
             },
         },
         yAxis: {
             type: 'value',
-            min: minValue - padding, // 动态调整纵轴范围
+            min: minValue - padding,
             max: maxValue + padding,
         },
         grid: {
-            top: 20, // 上间距
-            bottom: 50, // 下间距，增加以容纳横轴标签
-            left: 50, // 左间距，增加以容纳纵轴标签
-            right: 20, // 右间距
+            top: 20,
+            bottom: 50,
+            left: 50,
+            right: 20,
         },
         dataZoom: [
             {
-                type: 'inside', // 内置缩放
-                start: 0, // 默认显示前 30 个数据点
-                end: (30 / xAxisData.length) * 100,
+                type: 'inside',
+                start: 0,
+                end: Math.min(30, xAxisData.length) / xAxisData.length * 100,
             },
             {
-                type: 'slider', // 滑动条
+                type: 'slider',
                 start: 0,
-                end: (30 / xAxisData.length) * 100,
+                end: Math.min(30, xAxisData.length) / xAxisData.length * 100,
             },
         ],
         series: [
@@ -311,8 +324,10 @@ export function renderLineChartByDataPoints(chartDom, data, selectedColumn, getC
                     color: '#91CC75',
                 },
                 lineStyle: {
-                    width: 2, // 线条宽度
+                    width: 2,
                 },
+                // 处理数据缺失
+                connectNulls: false, // 是否连接空数据点，根据需求设置为true或false
             },
         ],
     };
@@ -333,60 +348,84 @@ export function renderLineChartByHour(chartDom, data, selectedColumn, getColumnL
 
     const chartInstance = echarts.init(chartDom);
 
-    // 按小时聚合数据（每 6 个数据点为一小时）
+    // 按小时聚合数据（每6个数据点为一小时）
     const hourlyData = [];
     const hourlyTimestamps = [];
+
     for (let i = 0; i < data.length; i += 6) {
         const hourData = data.slice(i, i + 6);
-        const averageValue = hourData.reduce((sum, item) => sum + item[selectedColumn], 0) / hourData.length;
-        hourlyData.push(averageValue);
-        hourlyTimestamps.push(formatTimestamp(hourData[0].timestamp)); // 使用第一个数据点的时间戳
+        // 过滤无效数据点
+        const validHourData = hourData.filter(item =>
+            item[selectedColumn] !== null &&
+            item[selectedColumn] !== undefined &&
+            !isNaN(item[selectedColumn])
+        );
+
+        // 只有当有有效数据时才计算平均值
+        if (validHourData.length > 0) {
+            const averageValue = validHourData.reduce((sum, item) => sum + item[selectedColumn], 0) / validHourData.length;
+            hourlyData.push(averageValue);
+            hourlyTimestamps.push(formatTimestamp(hourData[0].timestamp)); // 使用第一个数据点的时间戳
+        } else {
+            // 如果没有有效数据，添加null值
+            hourlyData.push(null);
+            hourlyTimestamps.push(formatTimestamp(hourData[0].timestamp));
+        }
     }
 
-    // 计算纵轴范围
-    const minValue = Math.min(...hourlyData);
-    const maxValue = Math.max(...hourlyData);
-    const padding = (maxValue - minValue) * 0.1; // 增加 10% 的间距
+    // 计算有效数据点
+    const validData = hourlyData.filter(val => val !== null);
+
+    // 设置默认纵轴范围（当没有有效数据时）
+    let minValue = 0;
+    let maxValue = 10;
+    let padding = 1;
+
+    if (validData.length > 0) {
+        minValue = Math.min(...validData);
+        maxValue = Math.max(...validData);
+        padding = (maxValue - minValue) * 0.1; // 增加10%的间距
+    }
 
     const option = {
         tooltip: {
             trigger: 'axis',
             formatter: (params) => {
                 const { dataIndex } = params[0];
-                const timestamp = hourlyTimestamps[dataIndex]; // 获取格式化后的时间戳
-                const value = hourlyData[dataIndex]; // 获取数值
-                return `${timestamp}, ${value}`; // 返回格式如 "7.12 10:30, 26.3℃"
+                const timestamp = hourlyTimestamps[dataIndex];
+                const value = hourlyData[dataIndex];
+                return `${timestamp}, ${value !== null ? value.toFixed(2) : '无数据'}`;
             },
         },
         xAxis: {
             type: 'category',
             data: hourlyTimestamps,
-            boundaryGap: false, // 不留空白
+            boundaryGap: false,
             axisLabel: {
-                rotate: 45, // 旋转标签以避免重叠
+                rotate: 45,
             },
         },
         yAxis: {
             type: 'value',
-            min: minValue - padding, // 动态调整纵轴范围
+            min: minValue - padding,
             max: maxValue + padding,
         },
         grid: {
-            top: 20, // 上间距
-            bottom: 50, // 下间距，增加以容纳横轴标签
-            left: 50, // 左间距，增加以容纳纵轴标签
-            right: 20, // 右间距
+            top: 20,
+            bottom: 50,
+            left: 50,
+            right: 20,
         },
         dataZoom: [
             {
-                type: 'inside', // 内置缩放
-                start: 0, // 默认显示前 30 个数据点
-                end: (30 / hourlyTimestamps.length) * 100,
+                type: 'inside',
+                start: 0,
+                end: Math.min(30, hourlyTimestamps.length) / hourlyTimestamps.length * 100,
             },
             {
-                type: 'slider', // 滑动条
+                type: 'slider',
                 start: 0,
-                end: (30 / hourlyTimestamps.length) * 100,
+                end: Math.min(30, hourlyTimestamps.length) / hourlyTimestamps.length * 100,
             },
         ],
         series: [
@@ -398,8 +437,9 @@ export function renderLineChartByHour(chartDom, data, selectedColumn, getColumnL
                     color: '#5470C6',
                 },
                 lineStyle: {
-                    width: 2, // 线条宽度
+                    width: 2,
                 },
+                connectNulls: false, // 是否连接空数据点
             },
         ],
     };

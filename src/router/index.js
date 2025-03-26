@@ -16,6 +16,7 @@ const HistoryApply = () => import('../views/download/HistoryApply.vue');
 const NewApply = () => import('../views/download/NewApply.vue');
 const AdminDownloadManage = () => import('../views/admin/AdminDownloadManage.vue');
 const DataVisualize = () => import('../views/visualize/DataVisualize.vue');
+const HighSensorVisualize = () => import('../views/visualize/HighSensorVisualize.vue');
 const UserConfig = () => import('../views/config/UserConfig.vue');
 const ModifyAvatar = () => import('../views/config/ModifyAvatar.vue');
 const ModifyPassword = () => import('../views/config/ModifyPassword.vue');
@@ -36,6 +37,7 @@ const routes = [
   { path: '/download/newapply', component: NewApply, meta: { requiresAuth: true } }, // 需要登录
   { path: '/admin/admindownloadmanage', component: AdminDownloadManage, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
   { path: '/visualize', component: DataVisualize, meta: { requiresAuth: true } }, // 需要登录
+  { path: '/visualize/highsensor', component: HighSensorVisualize, meta: { requiresAuth: true } }, // 需要登录
   { path: '/userconfig', component: UserConfig, meta: { requiresAuth: true } }, // 需要登录
   { path: '/config/avatar', component: ModifyAvatar, meta: { requiresAuth: true } }, // 需要登录
   { path: '/config/password', component: ModifyPassword, meta: { requiresAuth: true } }, // 需要登录

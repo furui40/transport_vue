@@ -82,7 +82,11 @@
     <div class="query-result-and-visualize">
       <!-- 左半部分：可视化 -->
       <div class="visualize-panel">
-        <component :is="currentVisualizationComponent" :data="tableData" />
+        <component 
+          :is="currentVisualizationComponent" 
+          :data="tableData"
+          :key="selectedDataType" 
+        />
       </div>
 
       <!-- 右半部分：表格展示 -->
@@ -185,18 +189,50 @@ export default {
     },
     filteredColumns() {
       if (this.tableData.length === 0) return {};
+      if (!['subside', 'waterPressure', 'humiture'].includes(this.selectedDataType)) {
       const dynamicColumns = new Set();
-      
       this.tableData.forEach(item => {
         Object.keys(item).forEach(key => {
-          if (key !== 'timestamp') dynamicColumns.add(key);
+           if (key !== 'timestamp') dynamicColumns.add(key);
+        });
+      });
+      return Array.from(dynamicColumns).reduce((acc, key) => {
+        acc[key] = true;
+         return acc;
+       }, {});
+     }else{
+      // 根据选择的测点生成预期间列名
+      const expectedColumns = new Set();
+      
+      this.selectedPoints.forEach(point => {
+        if (this.selectedDataType === 'humiture') {
+          // 温湿度每个测点需要拆分为两个字段
+          expectedColumns.add(`${point}_w`);
+          expectedColumns.add(`${point}_t`);
+        } else {
+          // 沉降/孔隙水压力直接使用测点ID
+          expectedColumns.add(point);
+        }
+      });
+
+      // 合并实际存在的列（防止数据缺失导致的空白列）
+      const actualColumns = new Set();
+      this.tableData.forEach(item => {
+        Object.keys(item).forEach(key => {
+          if (key !== 'timestamp') actualColumns.add(key);
         });
       });
 
-      return Array.from(dynamicColumns).reduce((acc, key) => {
+      // 取交集确保只显示期望且存在的列
+      const finalColumns = new Set(
+        [...expectedColumns].filter(col => actualColumns.has(col))
+      );
+
+      return Array.from(finalColumns).reduce((acc, key) => {
         acc[key] = true;
         return acc;
       }, {});
+     }
     },
     paginatedData() {
       const start = (this.currentPage - 1) * this.pageSize;
@@ -227,6 +263,16 @@ export default {
       if (!this.startTime || !this.stopTime) {
         this.$message.warning('请选择时间范围');
         return;
+      }
+      if (['subside', 'waterPressure', 'humiture'].includes(this.selectedDataType)) {
+        if (this.selectedPoints.length === 0) {
+          this.$message.warning('请至少选择一个测点');
+          return;
+        }
+        if(this.stopTime-this.startTime <= 0){
+          this.$message.warning('结束时间需大于开始时间');
+          return;
+        }
       }
 
       const userId = this.$store.state.user.userId;
