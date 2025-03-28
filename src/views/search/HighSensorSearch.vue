@@ -16,7 +16,56 @@
           :value="decoder"
         />
       </el-select>
+
+      <!-- 全局快捷选择按钮 -->
+      <div class="quick-select-buttons">
+        <el-button size="small" @click="toggleAllChannels">所有信道</el-button>
+        <el-button size="small" @click="toggleAllOriginal">所有原始值</el-button>
+        <el-button size="small" @click="toggleAllActual">所有实际值</el-button>
+        <el-button size="small" type="primary" @click="showQueryInstructions">查询说明</el-button>
+      </div>
     </div>
+
+    <!-- 查询说明按钮 -->
+    <el-button plain @click="showInstructionsDialog = true">查询说明</el-button>
+
+    <!-- 查询说明弹窗 -->
+    <el-dialog
+      v-model="showInstructionsDialog"
+      title="查询说明"
+      width="600px"
+      :before-close="handleClose"
+    >
+      <div class="instructions-content">
+        <h3>查询方法说明：</h3>
+        <ol>
+          <li>首先选择要查询的解调器</li>
+          <li>在表格中选择要查询的信道和值类型（原始值/实际值/修正值）</li>
+          <li>设置查询的时间范围</li>
+          <li>设置采样频率（1-100之间的整数）</li>
+          <li>点击"查询"按钮获取数据</li>
+        </ol>
+        <p>提示：您可以使用表格右侧的行级快捷按钮或上方的全局快捷按钮快速选择多个信道。</p>
+        
+        <h3>示例查询：</h3>
+        <p>点击下方按钮将自动设置一个示例查询条件：</p>
+        <ul>
+          <li>选择第一行信道（4-6号）的实际值</li>
+          <li>设置时间范围为2024-07-12 12:33:11到2024-07-12 12:33:14</li>
+          <li>设置采样频率为10</li>
+          <li>自动触发查询</li>
+        </ul>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="showInstructionsDialog = false">取消</el-button>
+          <el-button type="primary" @click="loadExampleQuery">
+            加载示例查询
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
 
     <!-- 信道选择表格 -->
     <div class="channel-table">
@@ -33,6 +82,13 @@
                 </template>
               </div>
             </div>
+          </td>
+          <!-- 行级快捷选择 -->
+          <td class="row-actions">
+            <el-button-group>
+              <el-button size="small" @click="toggleRowOriginal(row)">行原始值</el-button>
+              <el-button size="small" @click="toggleRowActual(row)">行实际值</el-button>
+            </el-button-group>
           </td>
         </tr>
       </table>
@@ -86,8 +142,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import axios from 'axios';
-import * as echarts from "echarts";
-import * as XLSX from 'xlsx'; 
+import { ElMessageBox } from 'element-plus';
 
 export default {
   data() {
@@ -95,37 +150,77 @@ export default {
       decoders: [1, 2, 3, 4], // 解调器列表
       currentDecoder: 1, // 当前选择的解调器
       selectedFields: {
-      1: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器1的信道选择状态
-      2: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器2的信道选择状态
-      3: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器3的信道选择状态
-      4: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器4的信道选择状态
-    },
+        1: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器1的信道选择状态
+        2: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器2的信道选择状态
+        3: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器3的信道选择状态
+        4: Array.from({ length: 32 }, () => ({ ori: false, act: false, rev: [] })), // 解调器4的信道选择状态
+      },
       startTime: null, // 开始时间
       stopTime: null, // 结束时间
       queryResult: null, // 查询结果
       samplingInterval: 10, // 采样间隔，默认每 10 个数据点选择一个
       isSmooth: false, // 是否显示平滑曲线
       chartData: {}, // 图表数据
+      showInstructionsDialog: false, // 是否显示查询说明弹窗
     };
   },
   computed: {
-        ...mapGetters('table', ['getColumnLabel', 'getChannelName']),
-    },
+    ...mapGetters('table', ['getColumnLabel', 'getChannelName']),
+  },
   methods: {
+    handleClose(done) {
+      ElMessageBox.confirm('确定要关闭查询说明吗？')
+        .then(() => {
+          done();
+        })
+        .catch(() => {
+          // 取消关闭
+        });
+    },
+
+    showQueryInstructions() {
+      this.showInstructionsDialog = true;
+      console.log('showInstructionsDialog:', this.showInstructionsDialog);
+    },
+    
+    loadExampleQuery() {
+      // 关闭弹窗
+      this.showInstructionsDialog = false;
+      
+      // 选择第一行(4-6号信道)的实际值
+      for (let i = 3; i < 6; i++) {
+        this.selectedFields[this.currentDecoder][i].act = true;
+      }
+      
+      // 设置时间范围
+      this.startTime = Math.floor(new Date('2024-07-12 12:33:11').getTime() / 1000);
+      this.stopTime = Math.floor(new Date('2024-07-12 12:33:14').getTime() / 1000);
+      
+      // 设置采样频率
+      this.samplingInterval = 10;
+      
+      // 自动触发查询
+      this.$nextTick(() => {
+        this.handleQuery();
+      });
+    },
+
     // 切换解调器
     handleDecoderChange(decoder) {
       this.currentDecoder = decoder;
     },
+    
     getRevisionCount(decoder, channel) {
-    // 根据解调器和信道编号返回修正值数量
-        if ((decoder === 1 && (channel === 27 || channel === 28 || channel === 29)) || (decoder === 3 && (channel === 27 || channel === 28 || channel === 29))) return 1;
-        if ((decoder === 1 && channel === 25) || (decoder === 3 && channel === 25) || (decoder === 4 && channel === 24)) return 2;
-        if ((decoder === 1 && channel === 26) || (decoder === 3 && channel === 26) || (decoder === 4 && channel === 25)) return 4;
-        if ((decoder === 1 && channel === 23) || (decoder === 2 && (channel === 22 || channel === 24)) || (decoder === 3 && channel === 23) || (decoder === 4 && channel === 22)) return 6;
-        return 0;
+      // 根据解调器和信道编号返回修正值数量
+      if ((decoder === 1 && (channel === 27 || channel === 28 || channel === 29)) || (decoder === 3 && (channel === 27 || channel === 28 || channel === 29))) return 1;
+      if ((decoder === 1 && channel === 25) || (decoder === 3 && channel === 25) || (decoder === 4 && channel === 24)) return 2;
+      if ((decoder === 1 && channel === 26) || (decoder === 3 && channel === 26) || (decoder === 4 && channel === 25)) return 4;
+      if ((decoder === 1 && channel === 23) || (decoder === 2 && (channel === 22 || channel === 24)) || (decoder === 3 && channel === 23) || (decoder === 4 && channel === 22)) return 6;
+      return 0;
     },
+    
     async handleQuery() {
-    // 计算时间间隔
+      // 计算时间间隔
       const timeDiff = this.stopTime - this.startTime;
       if (timeDiff > 60) {
         this.$confirm('当前查询间隔超过60秒，继续查询可能导致查询时间过长和图像渲染卡顿，是否继续查询？', '警告', {
@@ -144,6 +239,7 @@ export default {
         this.executeQuery();
       }
     },
+    
     async executeQuery() {
       // 生成查询字段
       const fields = [];
@@ -202,12 +298,14 @@ export default {
 
         if (response.data.code === 200) {
           // 获取服务器生成的唯一查询ID
-          const queryId = response.data.queryId;
-          
+          const queryId = response.data.data;
           // 打开新标签页并传递查询ID
           const routeData = this.$router.resolve({
             path: '/visualize/highsensor',
-            query: { queryId }
+            query: { 
+            queryId,
+            fields: fields.join(',') // 添加fields参数
+          }
           });
           window.open(routeData.href, '_blank');
         }
@@ -235,7 +333,7 @@ export default {
         showConfirmButton: true,
         confirmButtonText: '复制',
         callback: () => {
-          // 点击“复制”按钮后，将内容复制到剪贴板
+          // 点击"复制"按钮后，将内容复制到剪贴板
           this.copyToClipboard(fieldNamesString);
         },
       });
@@ -272,6 +370,61 @@ export default {
       document.execCommand('copy');
       document.body.removeChild(textarea);
       this.$message.success('已复制到剪贴板');
+    },
+
+    toggleAllChannels() {
+      const currentFields = this.selectedFields[this.currentDecoder];
+      const allSelected = currentFields.every(field => field.ori && field.act);
+      
+      currentFields.forEach(field => {
+        field.ori = !allSelected;
+        field.act = !allSelected;
+        field.rev = field.rev.map(() => !allSelected);
+      });
+    },
+    
+    // 切换当前解调器所有原始值
+    toggleAllOriginal() {
+      const currentFields = this.selectedFields[this.currentDecoder];
+      const allSelected = currentFields.every(field => field.ori);
+      
+      currentFields.forEach(field => {
+        field.ori = !allSelected;
+      });
+    },
+    
+    // 切换当前解调器所有实际值
+    toggleAllActual() {
+      const currentFields = this.selectedFields[this.currentDecoder];
+      const allSelected = currentFields.every(field => field.act);
+      
+      currentFields.forEach(field => {
+        field.act = !allSelected;
+      });
+    },
+    
+    // 切换行内所有原始值
+    toggleRowOriginal(row) {
+      const startIdx = (row - 1) * 8;
+      const endIdx = startIdx + 8;
+      const currentFields = this.selectedFields[this.currentDecoder].slice(startIdx, endIdx);
+      const allSelected = currentFields.every(field => field.ori);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        this.selectedFields[this.currentDecoder][i].ori = !allSelected;
+      }
+    },
+    
+    // 切换行内所有实际值
+    toggleRowActual(row) {
+      const startIdx = (row - 1) * 8;
+      const endIdx = startIdx + 8;
+      const currentFields = this.selectedFields[this.currentDecoder].slice(startIdx, endIdx);
+      const allSelected = currentFields.every(field => field.act);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        this.selectedFields[this.currentDecoder][i].act = !allSelected;
+      }
     },
   },
 };
@@ -351,14 +504,6 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 图表容器优化 */
-.query-result {
-  margin-top: 16px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 12px;
-}
-
 .action-container {
   display: flex;
   justify-content: center;
@@ -389,5 +534,43 @@ export default {
 .button-group {
   display: flex;
   gap: 10px;
+}
+
+.decoder-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-select-buttons {
+  margin-left: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.channel-table table {
+  width: 100%;
+  border-collapse: collapse;
+  position: relative;
+}
+
+.instructions-content {
+  line-height: 1.6;
+}
+
+.instructions-content h3 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  color: #409EFF;
+}
+
+.instructions-content ol, .instructions-content ul {
+  padding-left: 20px;
+  margin-bottom: 15px;
+}
+
+.dialog-footer {
+  text-align: right;
 }
 </style>
