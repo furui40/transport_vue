@@ -17,9 +17,14 @@
       </el-menu-item>
 
       <!-- 管理员页面，只有管理员角色才显示 -->
-      <el-menu-item v-if="isAdmin" index="/admin" @click="goToAdminDownloadManage">
+      <el-menu-item v-if="isAdmin" index="/admindownload" @click="goToAdminDownloadManage">
         <el-icon><Stamp /></el-icon>
         <span>用户下载审核</span>
+      </el-menu-item>
+
+      <el-menu-item v-if="isAdmin" index="/admindata" @click="goToAdminDataManage">
+        <el-icon><Stamp /></el-icon>
+        <span>数据库数据更新</span>
       </el-menu-item>
 
       <el-menu-item v-if="!isGuest" @click="goToBaseInformation">
@@ -115,6 +120,10 @@ const goToUserDownloadManage = () => {
 
 const goToAdminDownloadManage = () => {
   router.push('/admin/admindownloadmanage'); // 跳转到用户下载管理查询
+};
+
+const goToAdminDataManage = () => {
+  router.push('/admin/admindatamanage'); // 跳转到用户下载管理查询
 };
 
 const goToDataVisualize = () => {

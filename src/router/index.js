@@ -26,7 +26,7 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/home', component: Home, meta: { requiresAuth: true } }, // 需要登录
-  { path: '/admin', component: AdminDataManagement, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
+  { path: '/admin/admindatamanage', component: AdminDataManagement, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
   { path: '/search/baseinformation', component: BaseInformation, meta: { requiresAuth: true } }, // 需要登录
   { path: '/search/highsensor', component: HighSensorSearch, meta: { requiresAuth: true } }, // 需要登录
   { path: '/search/dynamicweighing', component: DynamicWeighingSearch, meta: { requiresAuth: true, requiresGuest: true } }, // 游客可用
