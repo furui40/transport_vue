@@ -27,7 +27,12 @@
         <span>数据库数据更新</span>
       </el-menu-item>
 
-      <el-menu-item v-if="!isGuest" @click="goToBaseInformation">
+      <el-menu-item v-if="isAdmin" index="/adminhistory" @click="goToUploadHistory">
+        <el-icon><List /></el-icon>
+        <span>数据库更新记录</span>
+      </el-menu-item>
+
+      <el-menu-item v-if="!isGuest" index="/sensorinfo" @click="goToBaseInformation">
         <el-icon><location /></el-icon>
         <span>传感器基本信息</span>
       </el-menu-item>
@@ -73,7 +78,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { Search,House,Document, Menu, Location, Setting,Stamp } from '@element-plus/icons-vue';
+import { Search,House,Document, Menu, Location, Setting,Stamp,List } from '@element-plus/icons-vue';
 
 // 使用 Vuex 和 Router
 const store = useStore();
@@ -119,11 +124,15 @@ const goToUserDownloadManage = () => {
 };
 
 const goToAdminDownloadManage = () => {
-  router.push('/admin/admindownloadmanage'); // 跳转到用户下载管理查询
+  router.push('/admin/admindownloadmanage'); // 跳转到管理员下载管理
 };
 
 const goToAdminDataManage = () => {
-  router.push('/admin/admindatamanage'); // 跳转到用户下载管理查询
+  router.push('/admin/admindatamanage'); // 跳转到管理员数据库管理
+};
+
+const goToUploadHistory = () => {
+  router.push('/admin/uploadhistory'); // 跳转到管理员上传历史记录
 };
 
 const goToDataVisualize = () => {
@@ -131,7 +140,7 @@ const goToDataVisualize = () => {
 };
 
 const goToUserConfig = () => {
-  router.push('/userconfig'); // 跳转到用户下载管理查询
+  router.push('/userconfig'); // 跳转到用户设置
 };
 
 // 菜单展开事件

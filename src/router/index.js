@@ -5,7 +5,9 @@ const Welcome = () => import('../views/Welcome.vue');
 const Login = () => import('../views/Login.vue');
 const Register = () => import('../views/Register.vue');
 const Home = () => import('../views/Home.vue');
-const AdminDataManagement = () => import('../views/AdminDataManagement.vue');
+const AdminDataManagement = () => import('../views/admin/AdminDataManagement.vue');
+const AdminDownloadManage = () => import('../views/admin/AdminDownloadManage.vue');
+const UploadHistory = () => import('../views/admin/UploadHistory.vue');
 const BaseInformation = () => import('../views/search/BaseInformation.vue');
 const HighSensorSearch = () => import('../views/search/HighSensorSearch.vue');
 const DynamicWeighingSearch = () => import('../views/search/DynamicWeighingSearch.vue');
@@ -14,7 +16,6 @@ const ComprehensiveSearch = () => import('../views/search/ComprehensiveSearch.vu
 const UserDownloadManage = () => import('../views/download/UserDownloadManage.vue');
 const HistoryApply = () => import('../views/download/HistoryApply.vue');
 const NewApply = () => import('../views/download/NewApply.vue');
-const AdminDownloadManage = () => import('../views/admin/AdminDownloadManage.vue');
 const DataVisualize = () => import('../views/visualize/DataVisualize.vue');
 const HighSensorVisualize = () => import('../views/visualize/HighSensorVisualize.vue');
 const UserConfig = () => import('../views/config/UserConfig.vue');
@@ -27,6 +28,8 @@ const routes = [
   { path: '/register', component: Register },
   { path: '/home', component: Home, meta: { requiresAuth: true } }, // 需要登录
   { path: '/admin/admindatamanage', component: AdminDataManagement, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
+  { path: '/admin/admindownloadmanage', component: AdminDownloadManage, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
+  { path: '/admin/uploadhistory', component: UploadHistory, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
   { path: '/search/baseinformation', component: BaseInformation, meta: { requiresAuth: true } }, // 需要登录
   { path: '/search/highsensor', component: HighSensorSearch, meta: { requiresAuth: true } }, // 需要登录
   { path: '/search/dynamicweighing', component: DynamicWeighingSearch, meta: { requiresAuth: true, requiresGuest: true } }, // 游客可用
@@ -35,7 +38,6 @@ const routes = [
   { path: '/download/userdownloadmanage', component: UserDownloadManage, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/historyapply', component: HistoryApply, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/newapply', component: NewApply, meta: { requiresAuth: true } }, // 需要登录
-  { path: '/admin/admindownloadmanage', component: AdminDownloadManage, meta: { requiresAuth: true, requiresAdmin: true } }, // 需要管理员权限
   { path: '/visualize', component: DataVisualize, meta: { requiresAuth: true } }, // 需要登录
   { path: '/visualize/highsensor', component: HighSensorVisualize, meta: { requiresAuth: true }, props: route => ({ queryId: route.query.queryId }) }, // 需要登录
   { path: '/userconfig', component: UserConfig, meta: { requiresAuth: true } }, // 需要登录
