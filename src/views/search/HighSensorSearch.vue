@@ -19,15 +19,12 @@
 
       <!-- 全局快捷选择按钮 -->
       <div class="quick-select-buttons">
-        <el-button size="small" @click="toggleAllChannels">所有信道</el-button>
-        <el-button size="small" @click="toggleAllOriginal">所有原始值</el-button>
-        <el-button size="small" @click="toggleAllActual">所有实际值</el-button>
-        <el-button size="small" type="primary" @click="showQueryInstructions">查询说明</el-button>
+        <el-button size="small" type="primary" @click="toggleAllChannels">所有信道</el-button>
+        <el-button size="small" type="primary" @click="toggleAllOriginal">所有原始值</el-button>
+        <el-button size="small" type="primary" @click="toggleAllActual">所有实际值</el-button>
+        <el-button size="small" type="warning" @click="showQueryInstructions">查询说明</el-button>
       </div>
     </div>
-
-    <!-- 查询说明按钮 -->
-    <el-button plain @click="showInstructionsDialog = true">查询说明</el-button>
 
     <!-- 查询说明弹窗 -->
     <el-dialog

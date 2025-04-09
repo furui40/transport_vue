@@ -141,7 +141,6 @@
 
 <script>
 import axios from 'axios';
-import { mapActions } from 'vuex';
 
 export default {
   data() {
@@ -229,7 +228,6 @@ export default {
     }
   },
   methods: {
-    ...mapActions('upload', ['addUploadHistory']),
     getStatusTagType(status) {
       switch (status) {
         case 'processed': return 'success';
@@ -300,7 +298,7 @@ export default {
     async loadStatus() {
       try {
         const baseURL = 'http://localhost:8080';
-        const res = await axios.get(`${baseURL}/update/status`, {
+        const res = await axios.get(`${baseURL}/upload/status`, {
           params: { dataType: this.currentDataType }
         });
         
@@ -364,7 +362,7 @@ export default {
           
           try {
             const baseURL = 'http://localhost:8080';
-            const res = await axios.post(`${baseURL}/update/process`, null, {
+            const res = await axios.post(`${baseURL}/upload/process`, null, {
               params: {
                 dataType: this.currentDataType,
                 filePaths: batchFiles.join(','),
@@ -382,34 +380,12 @@ export default {
               this.processingStatus.status = 'success';
               this.processingStatus.message = `批次 ${i + 1}/${totalBatches} 处理成功`;
               
-              // 添加上传历史记录
-              batchFiles.forEach(filePath => {
-                this.addUploadHistory({
-                  dataType: this.currentDataType,
-                  record: {
-                    filePath,
-                    status: 'processed',
-                    timestamp: Date.now()
-                  }
-                });
-              });
             } else {
               // 更新文件状态为失败
               this.updateFileStatus(batchFiles, 'failed');
               this.processingStatus.status = 'exception';
               this.processingStatus.message = `批次 ${i + 1}/${totalBatches} 处理失败: ${res.data.message}`;
-              
-              // 添加失败的上传历史记录
-              batchFiles.forEach(filePath => {
-                this.addUploadHistory({
-                  dataType: this.currentDataType,
-                  record: {
-                    filePath,
-                    status: 'failed',
-                    timestamp: Date.now()
-                  }
-                });
-              });
+            
             }
           } catch (error) {
             if (axios.isCancel(error)) {
@@ -422,16 +398,6 @@ export default {
             this.processingStatus.status = 'exception';
             this.processingStatus.message = `批次 ${i + 1}/${totalBatches} 处理失败: ${error.message}`;
           
-            batchFiles.forEach(filePath => {
-              this.addUploadHistory({
-                dataType: this.currentDataType,
-                record: {
-                  filePath,
-                  status: 'failed',
-                  timestamp: Date.now()
-                }
-              });
-            });
           }
           
           // 短暂延迟，避免服务器压力过大
@@ -474,15 +440,6 @@ export default {
       this.selectedFiles = [file.filePath];
       await this.processFiles();
       
-      // 更新历史记录状态
-      this.addUploadHistory({
-        dataType: this.currentDataType,
-        record: {
-          filePath: file.filePath,
-          status: file.status,
-          timestamp: Date.now()
-        }
-      });
     }
   },
   mounted() {

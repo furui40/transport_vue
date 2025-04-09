@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import axios from 'axios';
 
 export default {
   data() {
@@ -81,112 +81,86 @@ export default {
       currentPage: 1,
       pageSize: 15,
       sortProp: 'timestamp',
-      sortOrder: 'descending'
+      sortOrder: 'descending',
+      historyData: []
     };
   },
   computed: {
-    ...mapGetters('upload', ['getUploadHistory']),
-    
     filteredHistory() {
-      let history = this.getUploadHistory(this.currentDataType) || [];
-      
-      // 排序处理
-      if (this.sortProp) {
-        history.sort((a, b) => {
-          const aValue = a[this.sortProp];
-          const bValue = b[this.sortProp];
-          
-          if (aValue === bValue) return 0;
-          
-          if (this.sortOrder === 'ascending') {
-            return aValue > bValue ? 1 : -1;
-          } else {
-            return aValue < bValue ? 1 : -1;
-          }
-        });
-      }
-      
-      return history;
+      // 直接从本地数据排序
+      return [...this.historyData].sort((a, b) => {
+        const aVal = a[this.sortProp];
+        const bVal = b[this.sortProp];
+        return this.sortOrder === 'ascending' ? aVal - bVal : bVal - aVal;
+      });
     },
-    
     paginatedHistory() {
       const start = (this.currentPage - 1) * this.pageSize;
-      const end = start + this.pageSize;
-      return this.filteredHistory.slice(start, end);
+      return this.filteredHistory.slice(start, start + this.pageSize);
     }
   },
   methods: {
-    ...mapActions('upload', ['fetchUploadHistory', 'deleteHistoryItem']),
-    
+    // 状态显示相关方法保持精简
     getStatusTagType(status) {
-      switch (status) {
-        case 'processed': return 'success';
-        case 'processing': return 'warning';
-        case 'failed': return 'danger';
-        default: return 'info';
-      }
+      const types = { processed: 'success', processing: 'warning', failed: 'danger' };
+      return types[status] || 'info';
     },
-    
     getStatusText(status) {
-      switch (status) {
-        case 'processed': return '已写入';
-        case 'processing': return '处理中';
-        case 'failed': return '失败';
-        default: return '未写入';
-      }
+      const texts = { processed: '已写入', processing: '处理中', failed: '失败' };
+      return texts[status] || '未写入';
     },
-    
     formatTimestamp(timestamp) {
-      if (!timestamp) return '';
-      const date = new Date(timestamp);
-      return date.toLocaleString();
+      return timestamp ? new Date(timestamp).toLocaleString() : '';
     },
-    
-    handleDataTypeChange() {
-      this.loadHistory();
-    },
-    
+
+    // 分页和排序处理
     handleSizeChange(val) {
       this.pageSize = val;
       this.currentPage = 1;
     },
-    
     handleCurrentChange(val) {
       this.currentPage = val;
     },
-    
     sortChange({ prop, order }) {
       this.sortProp = prop;
       this.sortOrder = order;
       this.currentPage = 1;
     },
-    
+
+    // 数据获取方法
     async loadHistory() {
       try {
-        await this.fetchUploadHistory(this.currentDataType);
-        this.currentPage = 1;
+        const baseURL = 'http://localhost:8080';
+        const { data } = await axios.get(`${baseURL}/upload/get_history`, {
+          params: { dataType: this.currentDataType }
+        });
+        if (data.code === 200) {
+          this.historyData = data.data;
+          this.currentPage = 1;
+        }
       } catch (error) {
-        this.$message.error('获取上传历史失败: ' + error.message);
+        this.$message.error('获取历史失败: ' + error.message);
       }
     },
-    
+
+    // 删除操作
     async deleteHistory(item) {
       try {
-        await this.$confirm('确定要删除这条记录吗?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
+        await this.$confirm('确定要删除这条记录吗?', '提示');
+        const baseURL = 'http://localhost:8080';
+        const { data } = await axios.post(`${baseURL}/upload/delete_history`, null,{
+          params: {
+            dataType: this.currentDataType,
+            filePath: item.filePath
+          }
         });
-        
-        await this.deleteHistoryItem({
-          dataType: this.currentDataType,
-          filePath: item.filePath
-        });
-        
-        this.$message.success('删除成功');
+        if (data.code === 200) {
+          await this.loadHistory();  // 刷新数据
+          this.$message.success('删除成功');
+        }
       } catch (error) {
         if (error !== 'cancel') {
-          this.$message.error('删除失败: ' + error.message);
+          this.$message.error('删除失败: ' + (error.response?.data?.message || error.message));
         }
       }
     }
