@@ -71,13 +71,14 @@ export default {
   data() {
     return {
       dataTypes: [
+        { value: 'highSensor', label: '高频传感器' },
         { value: 'dynamicWeighing', label: '动态称重数据' },
         { value: 'weather', label: '气象数据' },
         { value: 'subside', label: '沉降数据' },
         { value: 'waterPressure', label: '孔隙水压力数据' },
         { value: 'humiture', label: '温湿度数据' },
       ],
-      currentDataType: 'dynamicWeighing',
+      currentDataType: 'highSensor',
       currentPage: 1,
       pageSize: 15,
       sortProp: 'timestamp',

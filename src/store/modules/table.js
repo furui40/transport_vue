@@ -144,6 +144,39 @@ const state = {
             24: '2-3-ZYB-2 红', 25: '2-3-ZYB-2 绿', 26: '2-4-T-1', 27: '2-4-T-2',
         },
     },
+    channelDictionary: new Set([
+        "1_Ch1_ori", "1_Ch1_act", "1_Ch2_ori", "1_Ch2_act", "1_Ch3_ori", "1_Ch3_act", "1_Ch4_ori", "1_Ch4_act", "1_Ch5_ori", "1_Ch5_act",
+        "1_Ch6_ori", "1_Ch6_act", "1_Ch7_ori", "1_Ch7_act", "1_Ch8_ori", "1_Ch8_act", "1_Ch9_ori", "1_Ch9_act", "1_Ch10_ori", "1_Ch10_act",
+        "1_Ch11_ori", "1_Ch11_act", "1_Ch12_ori", "1_Ch12_act", "1_Ch13_ori", "1_Ch13_act", "1_Ch14_ori", "1_Ch14_act", "1_Ch15_ori", "1_Ch15_act",
+        "1_Ch16_ori", "1_Ch16_act", "1_Ch17_ori", "1_Ch17_act", "1_Ch18_ori", "1_Ch18_act", "1_Ch19_ori", "1_Ch19_act", "1_Ch20_ori", "1_Ch20_act",
+        "1_Ch21_ori", "1_Ch21_act", "1_Ch22_ori", "1_Ch22_act", "1_Ch23_ori", "1_Ch23_act", "1_Ch23_rev1", "1_Ch23_rev2", "1_Ch23_rev3", "1_Ch23_rev4",
+        "1_Ch23_rev5", "1_Ch23_rev6", "1_Ch24_ori", "1_Ch24_act", "1_Ch25_ori", "1_Ch25_act", "1_Ch25_rev1", "1_Ch25_rev2", "1_Ch26_ori", "1_Ch26_act",
+        "1_Ch26_rev1", "1_Ch26_rev2", "1_Ch26_rev3", "1_Ch26_rev4", "1_Ch27_ori", "1_Ch27_act", "1_Ch27_rev1", "1_Ch28_ori", "1_Ch28_act", "1_Ch28_rev1",
+        "1_Ch29_ori", "1_Ch29_act", "1_Ch29_rev1", "1_Ch30_ori", "1_Ch30_act", "1_Ch31_ori", "1_Ch31_act", "1_Ch32_ori", "1_Ch32_act", "2_Ch1_ori",
+        "2_Ch1_act", "2_Ch2_ori", "2_Ch2_act", "2_Ch3_ori", "2_Ch3_act", "2_Ch4_ori", "2_Ch4_act", "2_Ch5_ori", "2_Ch5_act", "2_Ch6_ori",
+        "2_Ch6_act", "2_Ch7_ori", "2_Ch7_act", "2_Ch8_ori", "2_Ch8_act", "2_Ch9_ori", "2_Ch9_act", "2_Ch10_ori", "2_Ch10_act", "2_Ch11_ori",
+        "2_Ch11_act", "2_Ch12_ori", "2_Ch12_act", "2_Ch13_ori", "2_Ch13_act", "2_Ch14_ori", "2_Ch14_act", "2_Ch15_ori", "2_Ch15_act", "2_Ch16_ori",
+        "2_Ch16_act", "2_Ch17_ori", "2_Ch17_act", "2_Ch18_ori", "2_Ch18_act", "2_Ch19_ori", "2_Ch19_act", "2_Ch20_ori", "2_Ch20_act", "2_Ch21_ori",
+        "2_Ch21_act", "2_Ch22_ori", "2_Ch22_act", "2_Ch22_rev1", "2_Ch22_rev2", "2_Ch22_rev3", "2_Ch22_rev4", "2_Ch22_rev5", "2_Ch22_rev6", "2_Ch23_ori",
+        "2_Ch23_act", "2_Ch24_ori", "2_Ch24_act", "2_Ch24_rev1", "2_Ch24_rev2", "2_Ch24_rev3", "2_Ch24_rev4", "2_Ch24_rev5", "2_Ch24_rev6", "2_Ch25_ori",
+        "2_Ch25_act", "2_Ch26_ori", "2_Ch26_act", "2_Ch27_ori", "2_Ch27_act", "2_Ch28_ori", "2_Ch28_act", "2_Ch29_ori", "2_Ch29_act", "2_Ch30_ori",
+        "2_Ch30_act", "2_Ch31_ori", "2_Ch31_act", "2_Ch32_ori", "2_Ch32_act", "3_Ch1_ori", "3_Ch1_act", "3_Ch2_ori", "3_Ch2_act", "3_Ch3_ori",
+        "3_Ch3_act", "3_Ch4_ori", "3_Ch4_act", "3_Ch5_ori", "3_Ch5_act", "3_Ch6_ori", "3_Ch6_act", "3_Ch7_ori", "3_Ch7_act", "3_Ch8_ori",
+        "3_Ch8_act", "3_Ch9_ori", "3_Ch9_act", "3_Ch10_ori", "3_Ch10_act", "3_Ch11_ori", "3_Ch11_act", "3_Ch12_ori", "3_Ch12_act", "3_Ch13_ori",
+        "3_Ch13_act", "3_Ch14_ori", "3_Ch14_act", "3_Ch15_ori", "3_Ch15_act", "3_Ch16_ori", "3_Ch16_act", "3_Ch17_ori", "3_Ch17_act", "3_Ch18_ori",
+        "3_Ch18_act", "3_Ch19_ori", "3_Ch19_act", "3_Ch20_ori", "3_Ch20_act", "3_Ch21_ori", "3_Ch21_act", "3_Ch22_ori", "3_Ch22_act", "3_Ch23_ori",
+        "3_Ch23_act", "3_Ch23_rev1", "3_Ch23_rev2", "3_Ch23_rev3", "3_Ch23_rev4", "3_Ch23_rev5", "3_Ch23_rev6", "3_Ch24_ori", "3_Ch24_act", "3_Ch25_ori",
+        "3_Ch25_act", "3_Ch25_rev1", "3_Ch25_rev2", "3_Ch26_ori", "3_Ch26_act", "3_Ch26_rev1", "3_Ch26_rev2", "3_Ch26_rev3", "3_Ch26_rev4", "3_Ch27_ori",
+        "3_Ch27_act", "3_Ch27_rev1", "3_Ch28_ori", "3_Ch28_act", "3_Ch28_rev1", "3_Ch29_ori", "3_Ch29_act", "3_Ch29_rev1", "3_Ch30_ori", "3_Ch30_act",
+        "3_Ch31_ori", "3_Ch31_act", "3_Ch32_ori", "3_Ch32_act", "4_Ch1_ori", "4_Ch1_act", "4_Ch2_ori", "4_Ch2_act", "4_Ch3_ori", "4_Ch3_act",
+        "4_Ch4_ori", "4_Ch4_act", "4_Ch5_ori", "4_Ch5_act", "4_Ch6_ori", "4_Ch6_act", "4_Ch7_ori", "4_Ch7_act", "4_Ch8_ori", "4_Ch8_act",
+        "4_Ch9_ori", "4_Ch9_act", "4_Ch10_ori", "4_Ch10_act", "4_Ch11_ori", "4_Ch11_act", "4_Ch12_ori", "4_Ch12_act", "4_Ch13_ori", "4_Ch13_act",
+        "4_Ch14_ori", "4_Ch14_act", "4_Ch15_ori", "4_Ch15_act", "4_Ch16_ori", "4_Ch16_act", "4_Ch17_ori", "4_Ch17_act", "4_Ch18_ori", "4_Ch18_act",
+        "4_Ch19_ori", "4_Ch19_act", "4_Ch20_ori", "4_Ch20_act", "4_Ch21_ori", "4_Ch21_act", "4_Ch22_ori", "4_Ch22_act", "4_Ch22_rev1", "4_Ch22_rev2",
+        "4_Ch22_rev3", "4_Ch22_rev4", "4_Ch22_rev5", "4_Ch22_rev6", "4_Ch23_ori", "4_Ch23_act", "4_Ch24_ori", "4_Ch24_act", "4_Ch24_rev1", "4_Ch24_rev2",
+        "4_Ch25_ori", "4_Ch25_act", "4_Ch25_rev3", "4_Ch25_rev4", "4_Ch26_ori", "4_Ch26_act", "4_Ch27_ori", "4_Ch27_act", "4_Ch28_ori", "4_Ch28_act",
+        "4_Ch29_ori", "4_Ch29_act", "4_Ch30_ori", "4_Ch30_act", "4_Ch31_ori", "4_Ch31_act", "4_Ch32_ori", "4_Ch32_act"
+    ]),
 };
 
 const getters = {
@@ -167,6 +200,9 @@ const getters = {
         return state.columnLabelMap[key] || key;
     },
     getChannelName: (state) => (decoder, channel) => state.channelNames[decoder]?.[channel] || '暂无',
+    isValidChannel: (state) => (channel) => {
+        return state.channelDictionary.has(channel);
+    },
 };
 
 export default {

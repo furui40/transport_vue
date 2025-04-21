@@ -5,7 +5,7 @@
       <el-col :span="8">
         <el-input v-model="userId" placeholder="请输入用户ID" clearable></el-input>
       </el-col>
-            <el-col :span="4">
+      <el-col :span="4">
         <el-button type="success" @click="searchByUserId">根据用户ID查询</el-button>
       </el-col>
       <el-col :span="4">
@@ -16,12 +16,14 @@
           <el-option label="已申请" value="已申请" />
           <el-option label="审核通过" value="审核通过" />
           <el-option label="审核不通过" value="审核不通过" />
+          <el-option label="下载中" value="下载中" />
+          <el-option label="下载完成" value="下载完成" />
           <el-option label="已完成" value="已完成" />
         </el-select>
       </el-col>
     </el-row>
 
-    <!-- 历史申请记录表格 -->
+        <!-- 历史申请记录表格 -->
     <el-table
       :data="paginatedData"
       style="width: 100%"
@@ -30,6 +32,28 @@
     >
       <!-- 选择框列 -->
       <el-table-column type="selection" width="55" />
+
+      <!-- 操作列（移动到复选框右侧） -->
+      <el-table-column label="操作" width="100" fixed>
+        <template #default="scope">
+          <el-button
+            v-if="scope.row.status === '审核通过'"
+            size="small"
+            type="primary"
+            @click="startDownload(scope.row)"
+          >
+            开始下载
+          </el-button>
+          <el-button
+            v-if="scope.row.status === '下载完成'"
+            size="small"
+            type="success"
+            @click="showSendDialog(scope.row)"
+          >
+            发送链接
+          </el-button>
+        </template>
+      </el-table-column>
 
       <!-- 动态列 -->
       <el-table-column
@@ -66,6 +90,15 @@
         placeholder="请输入审核不通过的理由"
       ></el-input>
     </div>
+
+    <!-- 发送链接对话框 -->
+    <el-dialog v-model="sendDialogVisible" title="发送下载链接" width="500px">
+      <el-input v-model="downloadLink" placeholder="请输入下载链接"></el-input>
+      <template #footer>
+        <el-button @click="sendDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="sendDownloadLink">确认发送</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -77,12 +110,12 @@ export default {
   name: 'AdminDownloadManage',
   data() {
     return {
-      userId: '', // 管理员输入的用户ID
-      selectedStatus: '', // 选择的状态
-      historyData: [], // 所有历史申请记录数据
-      filteredData: [], // 筛选后的数据
-      paginatedData: [], // 分页后的数据
-      selectedRows: [], // 选中的行数据
+      userId: '',
+      selectedStatus: '',
+      historyData: [],
+      filteredData: [],
+      paginatedData: [],
+      selectedRows: [],
       columns: [
         { prop: 'applyId' },
         { prop: 'userId' },
@@ -94,16 +127,18 @@ export default {
         { prop: 'userEmail' },
         { prop: 'msg' },
       ],
-      currentPage: 1, // 当前页码
-      pageSize: 8, // 每页显示条数
-      rejectReason: '', // 审核不通过的理由
+      currentPage: 1,
+      pageSize: 8,
+      rejectReason: '',
+      sendDialogVisible: false,
+      downloadLink: '',
+      currentApplyId: null
     };
   },
   computed: {
     ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']),
   },
   watch: {
-    // 监听 selectedStatus 变化，重新筛选数据
     selectedStatus() {
       this.filterData();
     },
@@ -113,11 +148,10 @@ export default {
     async searchAll() {
       try {
         const response = await axios.post('http://localhost:8080/download/searchapply', null, {
-          params: { method: '0', userId: this.userId }, // 查询所有数据
+          params: { method: '0', userId: this.userId },
         });
 
         if (response.data.code === 200) {
-          // 按 applyId 从大到小排序
           this.historyData = response.data.data
             .map(item => ({
               applyId: item.applyId || 'N/A',
@@ -130,8 +164,8 @@ export default {
               userEmail: item.userEmail || 'N/A',
               msg: item.msg || 'N/A',
             }))
-            .sort((a, b) => b.applyId - a.applyId); // 按 applyId 从大到小排序
-          this.filterData(); // 查询完成后筛选数据
+            .sort((a, b) => b.applyId - a.applyId);
+          this.filterData();
         } else {
           this.$message.error('查询失败: ' + response.data.message);
         }
@@ -153,7 +187,6 @@ export default {
         });
 
         if (response.data.code === 200) {
-          // 按 applyId 从大到小排序
           this.historyData = response.data.data
             .map(item => ({
               applyId: item.applyId || 'N/A',
@@ -166,8 +199,8 @@ export default {
               userEmail: item.userEmail || 'N/A',
               msg: item.msg || 'N/A',
             }))
-            .sort((a, b) => b.applyId - a.applyId); // 按 applyId 从大到小排序
-          this.filterData(); // 查询完成后筛选数据
+            .sort((a, b) => b.applyId - a.applyId);
+          this.filterData();
         } else {
           this.$message.error('查询失败: ' + response.data.message);
         }
@@ -176,7 +209,7 @@ export default {
       }
     },
 
-    // 将 Unix 时间戳转换为本地时间格式
+    // 格式化时间戳
     formatTimestamp(timestamp) {
       if (!timestamp) return 'N/A';
       return new Date(parseInt(timestamp) * 1000).toLocaleString();
@@ -195,24 +228,18 @@ export default {
       }
 
       try {
-        // 获取选中的申请ID列表
         const applyIds = this.selectedRows.map(row => row.applyId);
 
-        // 调用后端接口
         const response = await axios.post('http://localhost:8080/download/passapply', null, {
-          params: { applyIds: applyIds.join(',') }, // 将数组转换为逗号分隔的字符串
+          params: { applyIds: applyIds.join(',') },
         });
 
         if (response.data.code === 200) {
           this.$message.success('审核通过成功');
-
-          // 直接更新表格数据
           this.selectedRows.forEach(row => {
-            row.status = '审核通过'; // 更新状态
-            row.msg = '审核通过'; // 清空消息
+            row.status = '审核通过';
+            row.msg = '审核通过';
           });
-
-          // 清空选中行
           this.selectedRows = [];
         } else {
           this.$message.error('审核通过失败: ' + response.data.message);
@@ -234,27 +261,21 @@ export default {
       }
 
       try {
-        // 获取选中的申请ID列表
         const applyIds = this.selectedRows.map(row => row.applyId);
 
-        // 调用后端接口
         const response = await axios.post('http://localhost:8080/download/rejectapply', null, {
           params: {
-            applyIds: applyIds.join(','), // 将数组转换为逗号分隔的字符串
-            reason: this.rejectReason, // 审核不通过的理由
+            applyIds: applyIds.join(','),
+            reason: this.rejectReason,
           },
         });
 
         if (response.data.code === 200) {
           this.$message.success('审核不通过成功');
-
-          // 直接更新表格数据
           this.selectedRows.forEach(row => {
-            row.status = '审核不通过'; // 更新状态
-            row.msg = this.rejectReason; // 设置不通过理由
+            row.status = '审核不通过';
+            row.msg = this.rejectReason;
           });
-
-          // 清空选中行和理由文本框
           this.selectedRows = [];
           this.rejectReason = '';
         } else {
@@ -265,6 +286,73 @@ export default {
       }
     },
 
+    // 开始下载
+    async startDownload(row) {
+      try {
+        const baseURL = 'http://localhost:8080';
+        const response = await axios.post(`${baseURL}/download/startdownload`, null, {
+          params: {
+            fields: row.fields,
+            startTimeStr: row.startTime,
+            stopTimeStr: row.stopTime,
+            userId: row.userId,
+            samplingInterval: 10, // 统一设置为10
+            applyId: row.applyId
+          },
+        });
+
+        if (response.data.code === 200) {
+          this.$message.success('下载任务已开始');
+          row.status = '下载中';
+        } else {
+          this.$message.error('开始下载失败: ' + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error('开始下载失败: ' + error.message);
+      }
+    },
+
+    // 显示发送链接对话框
+    showSendDialog(row) {
+      this.currentApplyId = row.applyId;
+      this.downloadLink = '';
+      this.sendDialogVisible = true;
+    },
+
+    // 发送下载链接
+    async sendDownloadLink() {
+      if (!this.downloadLink) {
+        this.$message.warning('请输入下载链接');
+        return;
+      }
+
+      try {
+        const baseURL = 'http://localhost:8080';
+        const response = await axios.post(`${baseURL}/download/send`, null, {
+          params: {
+            applyId: this.currentApplyId,
+            downloadLink: this.downloadLink
+          },
+        });
+
+        if (response.data.code === 200) {
+          this.$message.success('链接发送成功');
+          this.sendDialogVisible = false;
+          
+          // 更新表格中该行的状态
+          const row = this.historyData.find(item => item.applyId === this.currentApplyId);
+          if (row) {
+            row.status = '已完成';
+            row.msg = '下载链接已发送';
+          }
+        } else {
+          this.$message.error('链接发送失败: ' + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error('链接发送失败: ' + error.message);
+      }
+    },
+
     // 根据状态筛选数据
     filterData() {
       if (this.selectedStatus) {
@@ -272,10 +360,10 @@ export default {
           item => item.status === this.selectedStatus
         );
       } else {
-        this.filteredData = this.historyData; // 如果没有选择状态，显示全部数据
+        this.filteredData = this.historyData;
       }
-      this.currentPage = 1; // 重置到第一页
-      this.updatePaginatedData(); // 更新分页数据
+      this.currentPage = 1;
+      this.updatePaginatedData();
     },
 
     // 更新分页数据

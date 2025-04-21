@@ -95,18 +95,16 @@ export default {
         );
 
         if (response.data.code === 200) {
-          const userId = response.data.data;
+          const [userId, role] = response.data.data.split('::');
           const user = {
             username: form.username,
-            userId: userId,
-            role: 'normal' // 根据实际接口返回的角色调整
+            userId,
+            role
           };
 
-          // 调用 Vuex action 更新登录状态
           store.dispatch('user/login', user);
-
-          // 跳转到首页或其他目标页面
           router.push('/home');
+
           ElMessage.success('登录成功！');
         } else {
           ElMessage.error(`登录失败: ${response.data.message}`);
