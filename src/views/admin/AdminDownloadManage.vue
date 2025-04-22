@@ -12,7 +12,12 @@
         <el-button type="primary" @click="searchAll">查询所有数据</el-button>
       </el-col>
       <el-col :span="8">
-        <el-select v-model="selectedStatus" placeholder="筛选：请选择状态" clearable>
+        <el-select 
+          v-model="selectedStatus" 
+          placeholder="筛选：请选择状态" 
+          clearable
+        >
+          <el-option label="显示全部" value="" />
           <el-option label="已申请" value="已申请" />
           <el-option label="审核通过" value="审核通过" />
           <el-option label="审核不通过" value="审核不通过" />
@@ -23,7 +28,7 @@
       </el-col>
     </el-row>
 
-        <!-- 历史申请记录表格 -->
+    <!-- 历史申请记录表格 -->
     <el-table
       :data="paginatedData"
       style="width: 100%"
@@ -40,9 +45,10 @@
             v-if="scope.row.status === '审核通过'"
             size="small"
             type="primary"
+            :disabled="scope.row.downloading"
             @click="startDownload(scope.row)"
           >
-            开始下载
+            {{ scope.row.downloading ? '下载中...' : '开始下载' }}  <!-- 动态显示按钮文字 -->
           </el-button>
           <el-button
             v-if="scope.row.status === '下载完成'"
@@ -62,7 +68,34 @@
         :prop="column.prop"
         :label="getColumnLabel(column.prop)"
         :width="getColumnWidth(column.prop)"
-      />
+      >
+        <template #default="scope">
+          <template v-if="shouldTruncate(column.prop) && scope.row[column.prop]">
+            <div v-if="!scope.row[`${column.prop}Expanded`]">
+              {{ truncateText(scope.row[column.prop]) }}
+              <el-button
+                v-if="scope.row[column.prop].length > 80"
+                type="text"
+                @click="toggleExpand(scope.row, column.prop)"
+              >
+                展开
+              </el-button>
+            </div>
+            <div v-else>
+              {{ scope.row[column.prop] }}
+              <el-button
+                type="text"
+                @click="toggleExpand(scope.row, column.prop)"
+              >
+                收起
+              </el-button>
+            </div>
+          </template>
+          <template v-else>
+            {{ scope.row[column.prop] || 'N/A' }}
+          </template>
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -111,7 +144,7 @@ export default {
   data() {
     return {
       userId: '',
-      selectedStatus: '',
+      selectedStatus: '', 
       historyData: [],
       filteredData: [],
       paginatedData: [],
@@ -120,10 +153,10 @@ export default {
         { prop: 'applyId' },
         { prop: 'userId' },
         { prop: 'dataType' },
+        { prop: 'status' },
         { prop: 'fields' },
         { prop: 'startTime' },
         { prop: 'stopTime' },
-        { prop: 'status' },
         { prop: 'userEmail' },
         { prop: 'msg' },
       ],
@@ -132,7 +165,9 @@ export default {
       rejectReason: '',
       sendDialogVisible: false,
       downloadLink: '',
-      currentApplyId: null
+      currentApplyId: null,
+      // 需要截断显示的列
+      truncateColumns: ['fields', 'msg']
     };
   },
   computed: {
@@ -144,6 +179,22 @@ export default {
     },
   },
   methods: {
+    // 判断是否需要截断显示
+    shouldTruncate(prop) {
+      return this.truncateColumns.includes(prop);
+    },
+    
+    // 截断文本
+    truncateText(text) {
+      if (!text) return '';
+      return text.length > 80 ? text.substring(0, 80) + '...' : text;
+    },
+    
+    // 切换展开/收起状态
+    toggleExpand(row, prop) {
+      row[`${prop}Expanded`] = !row[`${prop}Expanded`];
+    },
+
     // 查询所有数据
     async searchAll() {
       try {
@@ -288,27 +339,44 @@ export default {
 
     // 开始下载
     async startDownload(row) {
+      // 防止重复点击
+      if (row.downloading) return;
+      
+      // 设置下载状态
+      row.downloading = true;
+      row.status = '下载中';
+      row.msg = '正在下载';
+      
       try {
         const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/download/startdownload`, null, {
+        const endpoint = row.dataType === '车辆经过时高频传感器数据' 
+          ? '/download/startdownload2' 
+          : '/download/startdownload';
+        
+        const response = await axios.post(`${baseURL}${endpoint}`, null, {
           params: {
             fields: row.fields,
             startTimeStr: row.startTime,
             stopTimeStr: row.stopTime,
             userId: row.userId,
-            samplingInterval: 10, // 统一设置为10
+            samplingInterval: 10,
             applyId: row.applyId
           },
         });
 
         if (response.data.code === 200) {
-          this.$message.success('下载任务已开始');
-          row.status = '下载中';
+          this.$message.success('下载任务已完成');
         } else {
           this.$message.error('开始下载失败: ' + response.data.message);
+          row.status = '审核通过'; 
+          row.msg = '下载失败: ' + response.data.message;
         }
       } catch (error) {
         this.$message.error('开始下载失败: ' + error.message);
+        row.status = '审核通过'; 
+        row.msg = '下载失败: ' + error.message;
+      } finally {
+        row.downloading = false;
       }
     },
 

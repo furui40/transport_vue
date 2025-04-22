@@ -100,6 +100,7 @@
           placeholder="选择开始时间"
           value-format="X"
           style="width: 180px"
+          :disabled="useSimpleTime"
         />
         <el-date-picker
           v-model="stopTime"
@@ -107,10 +108,37 @@
           placeholder="选择结束时间"
           value-format="X"
           style="width: 180px"
+          :disabled="useSimpleTime"
         />
+        
+        <!-- 简易时间选择 -->
+        <div class="simple-time-picker">
+          <el-checkbox v-model="useSimpleTime">使用简易时间</el-checkbox>
+          <el-date-picker
+            v-model="simpleTime"
+            type="datetime"
+            placeholder="选择中心时间"
+            value-format="X"
+            style="width: 180px"
+            :disabled="!useSimpleTime"
+            @change="updateSimpleTimeRange"
+          />
+        </div>
       </div>
     </div>
 
+        <!-- 自定义fields选择 -->
+    <div class="custom-fields-container">
+      <el-checkbox v-model="useCustomFields">使用自定义fields</el-checkbox>
+      <el-input
+        v-model="customFields"
+        placeholder="请输入自定义fields，格式如:1_Ch1_ori,1_Ch2_act"
+        @blur="validateCustomFields"
+        :disabled="!useCustomFields"
+      />
+      <span v-if="fieldError" class="error-message">{{ fieldError }}</span>
+    </div>
+    
     <!-- 采样间隔设置 -->
     <div class="action-container">
       <div class="action-group">
@@ -159,10 +187,15 @@ export default {
       isSmooth: false, // 是否显示平滑曲线
       chartData: {}, // 图表数据
       showInstructionsDialog: false, // 是否显示查询说明弹窗
+      useCustomFields: false, // 是否使用自定义fields
+      customFields: '', // 自定义fields
+      useSimpleTime: false, // 是否使用简易时间选择
+      simpleTime: null, // 简易时间选择的值
+      fieldError: '', // 自定义fields验证错误信息
     };
   },
   computed: {
-    ...mapGetters('table', ['getColumnLabel', 'getChannelName']),
+    ...mapGetters('table', ['getColumnLabel', 'getChannelName', 'isValidChannel']),
   },
   methods: {
     handleClose(done) {
@@ -204,7 +237,7 @@ export default {
 
     // 切换解调器
     handleDecoderChange(decoder) {
-      this.currentDecoder = decoder;
+      this.currentDecoder = decorder;
     },
     
     getRevisionCount(decoder, channel) {
@@ -237,24 +270,62 @@ export default {
       }
     },
     
+    // 验证自定义fields
+    validateCustomFields() {
+      if (!this.useCustomFields) {
+        this.fieldError = '';
+        return true;
+      }
+
+      const fields = this.customFields.split(/[\n,]/).map(f => f.trim()).filter(f => f);
+      
+      if (fields.length === 0) {
+        this.fieldError = '请填写至少一个数据项名称';
+        return false;
+      }
+      
+      for (const field of fields) {
+        if (!this.isValidChannel(field)) {
+          this.fieldError = `无效的数据项名称: ${field}`;
+          return false;
+        }
+      }
+      
+      this.fieldError = '';
+      return true;
+    },
+
     async executeQuery() {
+      // 验证fields
+      if (this.useCustomFields && !this.validateCustomFields()) {
+        this.$message.warning(this.fieldError || '请检查自定义fields格式');
+        return;
+      }
+
       // 生成查询字段
-      const fields = [];
-      for (const decoder of this.decoders) {
-        this.selectedFields[decoder].forEach((field, index) => {
-          const channel = index + 1;
-          if (field.ori) {
-            fields.push(`${decoder}_Ch${channel}_ori`);
-          }
-          if (field.act) {
-            fields.push(`${decoder}_Ch${channel}_act`);
-          }
-          field.rev.forEach((rev, i) => {
-            if (rev) {
-              fields.push(`${decoder}_Ch${channel}_rev${i + 1}`);
+      let fields = [];
+      
+      if (this.useCustomFields) {
+        // 使用自定义fields
+        fields = this.customFields.split(',').map(f => f.trim()).filter(f => f);
+      } else {
+        // 使用表格选择的fields
+        for (const decoder of this.decoders) {
+          this.selectedFields[decoder].forEach((field, index) => {
+            const channel = index + 1;
+            if (field.ori) {
+              fields.push(`${decoder}_Ch${channel}_ori`);
             }
+            if (field.act) {
+              fields.push(`${decoder}_Ch${channel}_act`);
+            }
+            field.rev.forEach((rev, i) => {
+              if (rev) {
+                fields.push(`${decoder}_Ch${channel}_rev${i + 1}`);
+              }
+            });
           });
-        });
+        }
       }
 
       // 检查参数
@@ -312,9 +383,19 @@ export default {
       }
     },
 
+    // 更新简易时间选择的范围
+    updateSimpleTimeRange() {
+      if (this.simpleTime) {
+        this.startTime = parseInt(this.simpleTime) - 6;
+        this.stopTime = parseInt(this.simpleTime) + 6;
+      }
+    },
+
     handleExportFieldNames() {
       // 获取用户选择的 field
-      const selectedFields = this.getSelectedFields();
+      const selectedFields = this.useCustomFields 
+        ? this.customFields.split(',').map(f => f.trim()).filter(f => f)
+        : this.getSelectedFields();
 
       if (selectedFields.length === 0) {
         this.$message.warning('请至少选择一个数据项');
@@ -424,6 +505,13 @@ export default {
       }
     },
   },
+  watch: {
+    useSimpleTime(newVal) {
+      if (newVal && this.simpleTime) {
+        this.updateSimpleTimeRange();
+      }
+    }
+  }
 };
 </script>
 
@@ -486,6 +574,18 @@ export default {
   gap: 0px;
 }
 
+/* 自定义fields选择 */
+.custom-fields-container {
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-fields-container .el-input {
+  flex: 1;
+}
+
 /* 时间选择器优化 */
 .time-picker-container {
   display: flex;
@@ -499,6 +599,15 @@ export default {
   padding: 12px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  align-items: center;
+}
+
+/* 简易时间选择 */
+.simple-time-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 20px;
 }
 
 .action-container {
