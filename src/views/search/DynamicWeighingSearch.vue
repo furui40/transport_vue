@@ -114,7 +114,7 @@ export default {
         this.$message.warning('游客模式只能查询六个小时，更长时间请登录后使用');
         return;
       }
-      const userId = this.$store.state.user.userId; // 假设 userId 存储在 Vuex 中
+      const userId = this.$store.state.user.userId; 
       if (!userId) {
         this.$message.warning('用户未登录，请先登录');
         return;

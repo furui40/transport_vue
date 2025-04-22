@@ -34,6 +34,10 @@
           <el-icon><Notebook /></el-icon>
           <span>数据库更新记录</span>
         </el-menu-item>
+        <el-menu-item index="/adminuploadfile" @click="goToUploadFile">
+          <el-icon><DataLine /></el-icon>
+          <span>上传其他文件</span>
+        </el-menu-item>
       </el-sub-menu>
 
       <!-- 普通用户功能 -->
@@ -66,13 +70,17 @@
             <el-icon><Download /></el-icon>
             <span class="menu-title">数据下载</span>
           </template>
-          <el-menu-item index="multi-download" @click="goToMultiDataDownload">
-            <el-icon><FolderOpened /></el-icon>
-            <span>数据表下载</span>
-          </el-menu-item>
           <el-menu-item v-if="!isAdmin" index="user-download" @click="goToUserDownloadManage">
             <el-icon><Files /></el-icon>
-            <span>下载管理</span>
+            <span>高频传感器下载管理</span>
+          </el-menu-item>
+          <el-menu-item index="multi-download" @click="goToMultiDataDownload">
+            <el-icon><FolderOpened /></el-icon>
+            <span>传感器数据下载</span>
+          </el-menu-item>
+          <el-menu-item index="file-download" @click="goToFileDownload">
+            <el-icon><FolderOpened /></el-icon>
+            <span>其他下载</span>
           </el-menu-item>
         </el-sub-menu>
 
@@ -177,6 +185,10 @@ import {
   const goToAdminDataManage = () => {
     router.push('/admin/admindatamanage'); // 跳转到管理员数据库管理
   };
+  
+  const goToUploadFile = () => {
+    router.push('/admin/adminuploadfile'); // 跳转到管理员上传文件
+  };
 
   const goToUploadHistory = () => {
     router.push('/admin/uploadhistory'); // 跳转到管理员上传历史记录
@@ -184,6 +196,10 @@ import {
 
   const goToMultiDataDownload = () => {
     router.push('/download/multidownload'); // 跳转到多种数据下载
+  };
+
+  const goToFileDownload = () => {
+    router.push('/download/filedownload'); // 跳转到其他数据表下载
   };
 
   const goToUserConfig = () => {
