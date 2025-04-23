@@ -13,6 +13,7 @@
         <el-select v-model="applyForm.dataType" placeholder="请选择数据类型">
           <el-option label="高频传感器数据" value="高频传感器数据" />
           <el-option label="车辆经过时高频传感器数据" value="车辆经过时高频传感器数据" />
+          <el-option label="车辆经过时所有传感器数据" value="车辆经过时所有传感器数据" />
         </el-select>
       </el-form-item>
 

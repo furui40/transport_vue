@@ -244,25 +244,32 @@ export default {
 
       const exportStart = Date.now();
       
-      // 准备数据 - 使用更高效的方式
-      const headers = {};
+      // 准备表头 - 按照fieldsOrder的顺序
+      const headers = ['时间戳'];
+      this.fieldsOrder.forEach(field => {
+        headers.push(this.getColumnLabel(field));
+      });
+
+      // 准备数据 - 按照fieldsOrder的顺序
       const data = this.queryResult.map(item => {
         const row = {
           '时间戳': new Date(item.time).toISOString()
         };
         
-        Object.entries(item.fieldValues).forEach(([field, value]) => {
-          const header = this.getColumnLabel(field);
-          headers[field] = header; // 收集所有表头
-          row[header] = value;
+        // 按照fieldsOrder的顺序添加数据
+        this.fieldsOrder.forEach(field => {
+          if (item.fieldValues[field] !== undefined) {
+            const header = this.getColumnLabel(field);
+            row[header] = item.fieldValues[field];
+          }
         });
         
         return row;
       });
 
-      // 确保所有字段都有表头
+      // 创建工作表，确保列顺序正确
       const worksheet = XLSX.utils.json_to_sheet(data, {
-        header: Object.values(headers)
+        header: headers
       });
       
       const workbook = XLSX.utils.book_new();

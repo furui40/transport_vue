@@ -1,23 +1,50 @@
 <template>
   <div class="admin-download-manage">
     <!-- 搜索区域 -->
-    <el-row :gutter="20" class="search-row">
-      <el-col :span="8">
-        <el-input v-model="userId" placeholder="请输入用户ID" clearable></el-input>
+    <el-row :gutter="10" class="search-row" type="flex" align="middle">
+      <el-col :span="5">
+        <el-input 
+          v-model="userId" 
+          placeholder="用户ID" 
+          clearable
+          class="compact-input"
+        ></el-input>
       </el-col>
-      <el-col :span="4">
-        <el-button type="success" @click="searchByUserId">根据用户ID查询</el-button>
+      <el-col :span="3">
+        <el-button 
+          type="success" 
+          @click="searchByUserId"
+          class="compact-btn"
+        >用户ID查询</el-button>
       </el-col>
-      <el-col :span="4">
-        <el-button type="primary" @click="searchAll">查询所有数据</el-button>
+      <el-col :span="3">
+        <el-button 
+          type="primary" 
+          @click="searchAll"
+          class="compact-btn"
+        >全部数据</el-button>
       </el-col>
-      <el-col :span="8">
+      <el-col :span="6">
+        <el-select 
+          v-model="selectedDataType" 
+          placeholder="筛选：数据类型" 
+          clearable
+          class="compact-select"
+        >
+          <el-option label="全部" value="" />
+          <el-option label="高频传感器" value="高频传感器数据" />
+          <el-option label="经过-高频传感器" value="车辆经过时高频传感器数据" />
+          <el-option label="经过-所有传感器" value="车辆经过时所有传感器数据" />
+        </el-select>
+      </el-col>
+      <el-col :span="6">
         <el-select 
           v-model="selectedStatus" 
-          placeholder="筛选：请选择状态" 
+          placeholder="筛选：状态" 
           clearable
+          class="compact-select"
         >
-          <el-option label="显示全部" value="" />
+          <el-option label="全部" value="" />
           <el-option label="已申请" value="已申请" />
           <el-option label="审核通过" value="审核通过" />
           <el-option label="审核不通过" value="审核不通过" />
@@ -144,6 +171,7 @@ export default {
   data() {
     return {
       userId: '',
+      selectedDataType: '',
       selectedStatus: '', 
       historyData: [],
       filteredData: [],
@@ -177,7 +205,11 @@ export default {
     selectedStatus() {
       this.filterData();
     },
+    selectedDataType() {
+      this.filterData();
+    }
   },
+
   methods: {
     // 判断是否需要截断显示
     shouldTruncate(prop) {
@@ -337,21 +369,31 @@ export default {
       }
     },
 
+    getDownloadEndpoint(dataType) {
+      switch(dataType) {
+        case '高频传感器数据':
+          return '/download/startdownload';
+        case '车辆经过时高频传感器数据':
+          return '/download/startdownload2';
+        case '车辆经过时所有传感器数据':
+          return '/download/startdownload3';
+        default:
+          return '/download/startdownload';
+      }
+    },
+
     // 开始下载
     async startDownload(row) {
-      // 防止重复点击
       if (row.downloading) return;
       
-      // 设置下载状态
       row.downloading = true;
       row.status = '下载中';
       row.msg = '正在下载';
       
       try {
         const baseURL = 'http://localhost:8080';
-        const endpoint = row.dataType === '车辆经过时高频传感器数据' 
-          ? '/download/startdownload2' 
-          : '/download/startdownload';
+        // 修改端点选择逻辑
+        const endpoint = this.getDownloadEndpoint(row.dataType);
         
         const response = await axios.post(`${baseURL}${endpoint}`, null, {
           params: {
@@ -365,15 +407,15 @@ export default {
         });
 
         if (response.data.code === 200) {
-          this.$message.success('下载任务已完成');
+          this.$message.success('下载完成');
         } else {
           this.$message.error('开始下载失败: ' + response.data.message);
-          row.status = '审核通过'; 
+          row.status = '审核通过';
           row.msg = '下载失败: ' + response.data.message;
         }
       } catch (error) {
         this.$message.error('开始下载失败: ' + error.message);
-        row.status = '审核通过'; 
+        row.status = '审核通过';
         row.msg = '下载失败: ' + error.message;
       } finally {
         row.downloading = false;
@@ -423,13 +465,15 @@ export default {
 
     // 根据状态筛选数据
     filterData() {
-      if (this.selectedStatus) {
-        this.filteredData = this.historyData.filter(
-          item => item.status === this.selectedStatus
-        );
-      } else {
-        this.filteredData = this.historyData;
-      }
+      this.filteredData = this.historyData.filter(item => {
+        // 数据类型筛选
+        const dataTypeMatch = !this.selectedDataType || 
+                             item.dataType === this.selectedDataType;
+        // 状态筛选
+        const statusMatch = !this.selectedStatus || 
+                           item.status === this.selectedStatus;
+        return dataTypeMatch && statusMatch;
+      });
       this.currentPage = 1;
       this.updatePaginatedData();
     },
@@ -456,7 +500,32 @@ export default {
 }
 
 .search-row {
+  display: flex;
+  flex-wrap: nowrap;
   margin-bottom: 20px;
+  align-items: center;
+}
+
+.compact-input  {
+  padding: 0 10px;
+  height: 32px;
+  line-height: 32px;
+}
+
+.compact-btn {
+  padding: 8px 10px;
+  height: 32px;
+}
+
+.compact-select  {
+  padding: 0 10px;
+  height: 32px;
+  line-height: 32px;
+}
+
+.el-col {
+  display: flex;
+  align-items: center;
 }
 
 .el-table {

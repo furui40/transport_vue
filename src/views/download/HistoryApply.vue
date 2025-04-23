@@ -8,20 +8,49 @@
         :prop="column.prop"
         :label="getColumnLabel(column.prop)"
         :width="getColumnWidth(column.prop)"
-      />
+      >
+        <template #default="scope">
+          <template v-if="shouldTruncate(column.prop) && scope.row[column.prop]">
+            <div v-if="!scope.row[`${column.prop}Expanded`]">
+              {{ truncateText(scope.row[column.prop]) }}
+              <el-button
+                v-if="scope.row[column.prop].length > 80"
+                type="text"
+                size="mini"
+                @click="toggleExpand(scope.row, column.prop)"
+              >
+                展开
+              </el-button>
+            </div>
+            <div v-else>
+              {{ scope.row[column.prop] }}
+              <el-button
+                type="text"
+                size="mini"
+                @click="toggleExpand(scope.row, column.prop)"
+              >
+                收起
+              </el-button>
+            </div>
+          </template>
+          <template v-else>
+            {{ scope.row[column.prop] || 'N/A' }}
+          </template>
+        </template>
+      </el-table-column>
     </el-table>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-import { mapGetters } from 'vuex'; // 引入 mapGetters
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'HistoryApply',
   data() {
     return {
-      historyData: [], // 历史申请记录数据
+      historyData: [],
       columns: [
         { prop: 'applyId' },
         { prop: 'dataType' },
@@ -32,46 +61,59 @@ export default {
         { prop: 'userEmail' },
         { prop: 'msg' },
       ],
+      // 需要截断显示的列
+      truncateColumns: ['fields', 'msg', 'userEmail']
     };
   },
   computed: {
-    // 映射 Vuex 的 getters
     ...mapGetters('table', ['getColumnWidth', 'getColumnLabel']),
   },
   created() {
-    // 页面加载时自动触发搜索
     this.fetchHistoryData();
   },
   methods: {
-    // 获取历史申请数据
+    // 判断是否需要截断显示
+    shouldTruncate(prop) {
+      return this.truncateColumns.includes(prop);
+    },
+    
+    // 截断文本
+    truncateText(text) {
+      if (!text) return '';
+      return text.length > 80 ? text.substring(0, 80) + '...' : text;
+    },
+    
+    // 切换展开/收起状态
+    toggleExpand(row, prop) {
+      row[`${prop}Expanded`] = !row[`${prop}Expanded`];
+    },
+
     async fetchHistoryData() {
       try {
-        const userId = this.$store.state.user.userId; // 获取当前用户 ID
+        const userId = this.$store.state.user.userId;
         if (!userId) {
           this.$message.warning('用户未登录，请先登录');
           return;
         }
 
-        // 调用后端接口
         const baseURL = 'http://localhost:8080';
         const response = await axios.post(`${baseURL}/download/searchapply`, null, {
           params: {
-            method: '1', // 查询当前用户的历史申请
+            method: '1',
             userId: userId,
           },
         });
 
         if (response.data.code === 200) {
-          // 处理查询结果
           this.historyData = response.data.data.map(item => ({
-            applyId: item.applyId || 'N/A', // 确保字段名称一致
-            dataType: item.dataType || 'N/A', // 确保字段名称一致
-            fields: item.fields || 'N/A', // 确保字段名称一致
-            startTime: item.startTime ? this.formatTimestamp(item.startTime) : 'N/A', // 处理空值
-            stopTime: item.stopTime ? this.formatTimestamp(item.stopTime) : 'N/A', // 处理空值
-            status: item.status || 'N/A', // 确保字段名称一致
-            userEmail: item.userEmail || 'N/A', // 确保字段名称一致
-            msg: item.msg || 'N/A', // 确保字段名称一致
+            applyId: item.applyId || 'N/A',
+            dataType: item.dataType || 'N/A',
+            fields: item.fields || 'N/A',
+            startTime: item.startTime ? this.formatTimestamp(item.startTime) : 'N/A',
+            stopTime: item.stopTime ? this.formatTimestamp(item.stopTime) : 'N/A',
+            status: item.status || 'N/A',
+            userEmail: item.userEmail || 'N/A',
+            msg: item.msg || 'N/A',
           }));
         } else {
           this.$message.error('查询失败: ' + response.data.message);
@@ -81,10 +123,9 @@ export default {
       }
     },
 
-    // 将 Unix 时间戳转换为本地时间格式
     formatTimestamp(timestamp) {
-      if (!timestamp) return 'N/A'; // 如果时间戳为空，返回默认值
-      return new Date(parseInt(timestamp) * 1000).toLocaleString(); // 转换为本地时间
+      if (!timestamp) return 'N/A';
+      return new Date(parseInt(timestamp) * 1000).toLocaleString();
     },
   },
 };
@@ -98,5 +139,11 @@ export default {
 
 .el-table {
   margin-top: 0px;
+}
+
+/* 展开/收起按钮样式 */
+.el-button--text {
+  padding: 0 0 0 5px;
+  vertical-align: baseline;
 }
 </style>
