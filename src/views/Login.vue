@@ -86,7 +86,7 @@ export default {
     // 登录方法
     const login = async () => {
       try {
-        const response = await axios.post('http://localhost:8080/web/login', 
+        const response = await axios.post('/api/web/login', 
           `username=${form.username}&password=${form.password}`, {
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
@@ -110,7 +110,7 @@ export default {
           ElMessage.error(`登录失败: ${response.data.message}`);
         }
       } catch (error) {
-        ElMessage.error('登录过程中出现错误，请稍后再试。');
+        ElMessage.error(error);
         console.error('Error during login: ', error);
       }
     };
@@ -118,7 +118,7 @@ export default {
     // 注册方法
     const register = async () => {
       try {
-        const response = await axios.post('http://localhost:8080/web/register',
+        const response = await axios.post('/api/web/register',
           `username=${form.username}&password=${form.password}`, {
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',

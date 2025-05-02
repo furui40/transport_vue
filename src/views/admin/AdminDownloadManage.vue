@@ -230,7 +230,7 @@ export default {
     // 查询所有数据
     async searchAll() {
       try {
-        const response = await axios.post('http://localhost:8080/download/searchapply', null, {
+        const response = await axios.post('/api/download/searchapply', null, {
           params: { method: '0', userId: this.userId },
         });
 
@@ -265,7 +265,7 @@ export default {
       }
 
       try {
-        const response = await axios.post('http://localhost:8080/download/searchapply', null, {
+        const response = await axios.post('/api/download/searchapply', null, {
           params: { method: '1', userId: this.userId },
         });
 
@@ -313,7 +313,7 @@ export default {
       try {
         const applyIds = this.selectedRows.map(row => row.applyId);
 
-        const response = await axios.post('http://localhost:8080/download/passapply', null, {
+        const response = await axios.post('/api/download/passapply', null, {
           params: { applyIds: applyIds.join(',') },
         });
 
@@ -346,7 +346,7 @@ export default {
       try {
         const applyIds = this.selectedRows.map(row => row.applyId);
 
-        const response = await axios.post('http://localhost:8080/download/rejectapply', null, {
+        const response = await axios.post('/api/download/rejectapply', null, {
           params: {
             applyIds: applyIds.join(','),
             reason: this.rejectReason,
@@ -391,11 +391,10 @@ export default {
       row.msg = '正在下载';
       
       try {
-        const baseURL = 'http://localhost:8080';
         // 修改端点选择逻辑
         const endpoint = this.getDownloadEndpoint(row.dataType);
         
-        const response = await axios.post(`${baseURL}${endpoint}`, null, {
+        const response = await axios.post(`/api${endpoint}`, null, {
           params: {
             fields: row.fields,
             startTimeStr: row.startTime,
@@ -437,8 +436,7 @@ export default {
       }
 
       try {
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/download/send`, null, {
+        const response = await axios.post(`/api/download/send`, null, {
           params: {
             applyId: this.currentApplyId,
             downloadLink: this.downloadLink

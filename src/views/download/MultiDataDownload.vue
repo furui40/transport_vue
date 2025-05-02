@@ -192,7 +192,7 @@ export default {
         waterPressure: '/search/waterPressure',
         humiture: '/search/humiture'
       }
-      return `http://localhost:8080${endpoints[dataType]}`
+      return `/api${endpoints[dataType]}`
     },
 
     processData(data, dataType) {
@@ -226,6 +226,95 @@ export default {
         return processedItem
     })
     },
+
+// 处理动态称重数据列顺序
+  sortDynamicWeighingColumns(data) {
+    if (!data.length) return data
+    
+    // 定义动态称重数据的列顺序
+    const dynamicWeighingColumnOrder = [
+      'timestamp',
+      'weightKg',
+      'vehicleLength',
+      'lane',
+      'axleCount',
+      'speed',
+      'temperature',
+      'direction',
+      'crossLane',
+      'type',
+      'axleWeight1',
+      'axleWeight2',
+      'axleWeight3',
+      'axleWeight4',
+      'axleWeight5',
+      'axleWeight6',
+      'wheelbase1',
+      'wheelbase2',
+      'wheelbase3',
+      'wheelbase4',
+      'wheelbase5',
+      'vehicleTypeCode',
+      'vehicleType',
+      'axle1Kn',
+      'axle2Kn',
+      'axle3Kn',
+      'offset'
+    ]
+    
+    return data.map(item => {
+      const sortedItem = {}
+      
+      // 按照定义的顺序添加列，只包含实际存在的列
+      dynamicWeighingColumnOrder.forEach(key => {
+        if (item.hasOwnProperty(key)) {
+          sortedItem[key] = item[key]
+        }
+      })
+      
+      return sortedItem
+    })
+  },
+
+  // 处理气象数据列顺序
+  sortWeatherColumns(data) {
+    if (!data.length) return data
+    
+    // 定义气象数据的列顺序
+    const weatherColumnOrder = [
+      'timestamp',
+      'ambientTemperature',
+      'temperature1',
+      'dewPointTemperature',
+      'ambientHumidity',
+      'airPressure',
+      'totalRadiation1Instant',
+      'uvradiationInstant',
+      'windDirection',
+      'instantWindSpeed',
+      'windSpeed2Min',
+      'windSpeed10Min',
+      'rainfallIntervalAccumulated',
+      'rainfallDailyAccumulated',
+      'totalRadiation1DailyAccumulated',
+      'uvradiationDailyAccumulated',
+      'illuminance',
+      'voltage'
+    ]
+    
+    return data.map(item => {
+      const sortedItem = {}
+      
+      // 按照定义的顺序添加列，只包含实际存在的列
+      weatherColumnOrder.forEach(key => {
+        if (item.hasOwnProperty(key)) {
+          sortedItem[key] = item[key]
+        }
+      })
+      
+      return sortedItem
+    })
+  },
 
     sortColumns(data) {
         if (!data.length) return data
@@ -318,19 +407,28 @@ export default {
       }
 
         try {
-            await Promise.all(requests)
-            
-            console.log('查询结果:', results)
+          await Promise.all(requests)
+          
+          console.log('查询结果:', results)
 
-            Object.keys(results).forEach(dataType => {
+          Object.keys(results).forEach(dataType => {
             results[dataType] = this.processData(results[dataType], dataType)
-            results[dataType] = this.sortColumns(results[dataType])
-            })
             
-            this.queryResults = results
-            this.$message.success('查询完成')
+            // 根据数据类型应用不同的列排序逻辑
+            if (dataType === 'dynamicWeighing') {
+              results[dataType] = this.sortDynamicWeighingColumns(results[dataType])
+            } else if (dataType === 'weather') {
+              results[dataType] = this.sortWeatherColumns(results[dataType])
+            } else {
+              // 其他数据类型保持原来的排序逻辑
+              results[dataType] = this.sortColumns(results[dataType])
+            }
+          })
+          
+          this.queryResults = results
+          this.$message.success('查询完成')
         } catch {
-            this.$message.error('部分数据查询失败，请检查控制台')
+          this.$message.error('部分数据查询失败，请检查控制台')
         }
     },
 
@@ -350,7 +448,15 @@ export default {
 
     // 时间戳转换
     convertToLocalTime(utcTime) {
-      return new Date(utcTime).toLocaleString();
+      const date = new Date(utcTime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+      
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     },
 
     // 获取数据类型标签
@@ -360,23 +466,23 @@ export default {
 
     // 单个下载
     downloadSingle(dataType) {
-        const data = this.queryResults[dataType]
-        if (!data || data.length === 0) return
+      const data = this.queryResults[dataType]
+      if (!data || data.length === 0) return
 
-        // 准备要导出的数据
-        const exportData = data.map(item => {
-            const exportItem = {}
-            Object.keys(item).forEach(key => {
-            // 转换列名为中文（如果需要）
-            exportItem[this.getColumnLabel(key)] = item[key]
-            })
-            return exportItem
+      // 准备要导出的数据
+      const exportData = data.map(item => {
+        const exportItem = {}
+        Object.keys(item).forEach(key => {
+          // 转换列名为中文
+          exportItem[this.getColumnLabel(key)] = item[key]
         })
+        return exportItem
+      })
 
-        const worksheet = XLSX.utils.json_to_sheet(exportData)
-        const workbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(workbook, worksheet, '数据')
-        XLSX.writeFile(workbook, `${this.getDataTypeLabel(dataType)}.xlsx`)
+      const worksheet = XLSX.utils.json_to_sheet(exportData)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, '数据')
+      XLSX.writeFile(workbook, `${this.getDataTypeLabel(dataType)}.xlsx`)
     },
 
     // 全部下载

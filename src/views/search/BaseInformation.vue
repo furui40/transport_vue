@@ -156,7 +156,6 @@
 <script>
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
-import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
 export default {

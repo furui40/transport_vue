@@ -70,7 +70,6 @@ import { ElMessage } from 'element-plus'
 import { useStore } from 'vuex'
 
 const store = useStore()
-const baseURL = 'http://localhost:8080'
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -86,7 +85,7 @@ const getUserId = () => {
 const fetchFileList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${baseURL}/file/list`, {
+    const response = await axios.get(`/api/file/list`, {
       headers: {
         'userId': getUserId()
       }
@@ -157,7 +156,7 @@ const handleCurrentChange = (val) => {
 // 下载文件
 const downloadFile = async (filename) => {
   try {
-    const response = await axios.get(`${baseURL}/file/download`, {
+    const response = await axios.get(`/api/file/download`, {
       params: { filename },
       responseType: 'blob',
       headers: {

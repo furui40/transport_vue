@@ -298,8 +298,7 @@ export default {
     
     async loadStatus() {
       try {
-        const baseURL = 'http://localhost:8080';
-        const res = await axios.get(`${baseURL}/upload/status`, {
+        const res = await axios.get(`/api/upload/status`, {
           params: { dataType: this.currentDataType }
         });
         
@@ -362,8 +361,7 @@ export default {
           this.processingStatus.message = `正在处理批次 ${i + 1}/${totalBatches}`;
           
           try {
-            const baseURL = 'http://localhost:8080';
-            const res = await axios.post(`${baseURL}/upload/process`, null, {
+            const res = await axios.post(`/api/upload/process`, null, {
               params: {
                 dataType: this.currentDataType,
                 filePaths: batchFiles.join(','),

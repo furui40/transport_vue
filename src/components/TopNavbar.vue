@@ -69,8 +69,7 @@ export default {
     const fetchAvatar = async () => {
       if (isUserLoggedIn.value) {
         try {
-          const baseURL = 'http://localhost:8080';
-          const response = await axios.get(`${baseURL}/avatar/getavatar?userId=${userId.value}`);
+          const response = await axios.get(`/api/avatar/getavatar?userId=${userId.value}`);
           if (response.data) {
             store.commit('user/setAvatarUrl', response.data);
           }

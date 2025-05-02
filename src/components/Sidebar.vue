@@ -19,23 +19,23 @@
       <!-- 管理员专属菜单 -->
       <el-sub-menu v-if="isAdmin" index="admin">
         <template #title>
-          <el-icon><User /></el-icon>
+          <el-icon><Setting /></el-icon>
           <span class="menu-title">管理员功能</span>
         </template>
         <el-menu-item index="/admindownload" @click="goToAdminDownloadManage">
-          <el-icon><DocumentChecked /></el-icon>
+          <el-icon><Document /></el-icon>
           <span>用户下载审核</span>
         </el-menu-item>
         <el-menu-item index="/admindata" @click="goToAdminDataManage">
-          <el-icon><DataLine /></el-icon>
+          <el-icon><DataBoard /></el-icon>
           <span>数据库数据更新</span>
         </el-menu-item>
         <el-menu-item index="/adminhistory" @click="goToUploadHistory">
-          <el-icon><Notebook /></el-icon>
+          <el-icon><Collection /></el-icon>
           <span>数据库更新记录</span>
         </el-menu-item>
         <el-menu-item index="/adminuploadfile" @click="goToUploadFile">
-          <el-icon><DataLine /></el-icon>
+          <el-icon><Upload /></el-icon>
           <span>上传其他文件</span>
         </el-menu-item>
       </el-sub-menu>
@@ -44,23 +44,27 @@
       <template v-if="!isGuest">
         <!-- 传感器信息 -->
         <el-menu-item index="/sensorinfo" @click="goToBaseInformation">
-          <el-icon><Monitor /></el-icon>
+          <el-icon><Cpu /></el-icon>
           <span class="menu-title">传感器信息</span>
         </el-menu-item>
 
         <!-- 数据查询 -->
         <el-sub-menu index="query">
           <template #title>
-            <el-icon><DataAnalysis /></el-icon>
+            <el-icon><Search /></el-icon>
             <span class="menu-title">数据查询</span>
           </template>
           <el-menu-item index="high-sensor" @click="goToHighSensorSearch">
-            <el-icon><TrendCharts /></el-icon>
+            <el-icon><Odometer /></el-icon>
             <span>高频传感器查询</span>
           </el-menu-item>
           <el-menu-item index="comprehensive" @click="goToComprehensiveSearch">
             <el-icon><PieChart /></el-icon>
             <span>综合数据查询</span>
+          </el-menu-item>
+          <el-menu-item index="comprehensivepro" @click="goToComprehensiveSearchPro">
+            <el-icon><DataAnalysis /></el-icon>
+            <span>数据查询与对比</span>
           </el-menu-item>
         </el-sub-menu>
 
@@ -71,22 +75,22 @@
             <span class="menu-title">数据下载</span>
           </template>
           <el-menu-item v-if="!isAdmin" index="user-download" @click="goToUserDownloadManage">
-            <el-icon><Files /></el-icon>
+            <el-icon><DocumentChecked /></el-icon>
             <span>高频传感器下载管理</span>
           </el-menu-item>
           <el-menu-item index="multi-download" @click="goToMultiDataDownload">
-            <el-icon><FolderOpened /></el-icon>
+            <el-icon><Folder /></el-icon>
             <span>传感器数据下载</span>
           </el-menu-item>
           <el-menu-item index="file-download" @click="goToFileDownload">
-            <el-icon><FolderOpened /></el-icon>
+            <el-icon><Files /></el-icon>
             <span>其他下载</span>
           </el-menu-item>
         </el-sub-menu>
 
         <!-- 用户设置 -->
         <el-menu-item index="config" @click="goToUserConfig">
-          <el-icon><Tools /></el-icon>
+          <el-icon><User /></el-icon>
           <span class="menu-title">用户设置</span>
         </el-menu-item>
       </template>
@@ -95,11 +99,11 @@
       <template v-if="isGuest">
         <el-sub-menu index="guest-query">
           <template #title>
-            <el-icon><Search /></el-icon>
+            <el-icon><DataAnalysis /></el-icon>
             <span class="menu-title">数据查询</span>
           </template>
           <el-menu-item index="dynamic-weighing" @click="goToDynamicWeighingSearch">
-            <el-icon><ScaleToOriginal /></el-icon>
+            <el-icon><Weigh /></el-icon>
             <span>动态称重数据查询</span>
           </el-menu-item>
           <el-menu-item index="weather" @click="goToWeatherSearch">
@@ -118,20 +122,22 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import {
   HomeFilled,
-  User,
-  DocumentChecked,
-  DataLine,
-  Notebook,
-  Monitor,
-  DataAnalysis,
-  TrendCharts,
-  PieChart,
-  Download,
-  FolderOpened,
-  Files,
-  Tools,
+  Setting,
+  Document,
+  DataBoard,
+  Collection,
+  Upload,
+  Cpu,
   Search,
-  ScaleToOriginal,
+  Odometer,
+  PieChart,
+  DataAnalysis,
+  Download,
+  DocumentChecked,
+  Folder,
+  Files,
+  User,
+  Weigh,
   Sunny
 } from '@element-plus/icons-vue';
 
@@ -174,6 +180,10 @@ import {
     router.push('/search/comprehensive'); // 跳转到综合数据查询
   };
 
+  const goToComprehensiveSearchPro = () => {
+    router.push('/search/comprehensivepro'); // 跳转到综合数据查询对比
+  };
+
   const goToUserDownloadManage = () => {
     router.push('/download/userdownloadmanage'); // 跳转到用户下载管理查询
   };
@@ -208,12 +218,12 @@ import {
 
   // 菜单展开事件
   const handleOpen = (key, keyPath) => {
-    console.log('Open: ', key, keyPath);
+    // console.log('Open: ', key, keyPath);
   };
 
   // 菜单关闭事件
   const handleClose = (key, keyPath) => {
-    console.log('Close: ', key, keyPath);
+    // console.log('Close: ', key, keyPath);
   };
 </script>
 

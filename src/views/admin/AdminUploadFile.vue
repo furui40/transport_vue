@@ -104,7 +104,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useStore } from 'vuex'
 
 const store = useStore()
-const baseURL = 'http://localhost:8080'
 const fileList = ref([])
 const existingFiles = ref([])
 const loading = ref(false)
@@ -121,7 +120,7 @@ const getUserId = () => {
 const fetchFileList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${baseURL}/file/list`, {
+    const response = await axios.get(`/api/file/list`, {
       headers: {
         'userId': getUserId()
       }
@@ -223,7 +222,7 @@ const submitUpload = async () => {
   })
 
   try {
-    const res = await axios.post(`${baseURL}/file/upload`, formData, {
+    const res = await axios.post(`/api/file/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'userId': getUserId()
@@ -240,7 +239,7 @@ const submitUpload = async () => {
 // 下载文件
 const downloadFile = async (filename) => {
   try {
-    const response = await axios.get(`${baseURL}/file/download`, {
+    const response = await axios.get(`/api/file/download`, {
       params: { filename },
       responseType: 'blob',
       headers: {
@@ -280,7 +279,7 @@ const confirmDelete = (filename) => {
 // 删除文件
 const deleteFile = async (filename) => {
   try {
-    await axios.delete(`${baseURL}/file/delete`, {
+    await axios.delete(`/api/file/delete`, {
       params: { filename },
       headers: {
         'userId': getUserId()

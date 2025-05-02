@@ -14,6 +14,7 @@ const HighSensorSearch = () => import('../views/search/HighSensorSearch.vue');
 const DynamicWeighingSearch = () => import('../views/search/DynamicWeighingSearch.vue');
 const WeatherSearch = () => import('../views/search/WeatherSearch.vue');
 const ComprehensiveSearch = () => import('../views/search/ComprehensiveSearch.vue');
+const ComprehensiveSearchPro = () => import('../views/search/ComprehensiveSearchPro.vue');
 const MultiDataDownload = () => import('../views/download/MultiDataDownload.vue');
 const UserDownloadManage = () => import('../views/download/UserDownloadManage.vue');
 const HistoryApply = () => import('../views/download/HistoryApply.vue');
@@ -39,6 +40,7 @@ const routes = [
   { path: '/search/dynamicweighing', component: DynamicWeighingSearch, meta: { requiresAuth: true, requiresGuest: true } }, // 游客可用
   { path: '/search/weather', component: WeatherSearch, meta: { requiresAuth: true, requiresGuest: true } }, // 游客可用
   { path: '/search/comprehensive', component: ComprehensiveSearch, meta: { requiresAuth: true } }, // 需要登录
+  { path: '/search/comprehensivepro', component: ComprehensiveSearchPro, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/multidownload', component: MultiDataDownload, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/userdownloadmanage', component: UserDownloadManage, meta: { requiresAuth: true } }, // 需要登录
   { path: '/download/historyapply', component: HistoryApply, meta: { requiresAuth: true } }, // 需要登录

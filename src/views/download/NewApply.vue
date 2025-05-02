@@ -157,8 +157,7 @@ export default {
         };
 
         // 发送请求
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/download/newapply`, null, { params });
+        const response = await axios.post(`/api/download/newapply`, null, { params });
 
         if (response.data.code === 200) {
           this.$message.success('申请提交成功');

@@ -120,8 +120,7 @@ export default {
         return;
       }
       try {
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/search/dynamicWeighing`, null, {
+        const response = await axios.post(`/api/search/dynamicWeighing`, null, {
           params: {
             startTime: this.startTime,
             stopTime: this.stopTime,

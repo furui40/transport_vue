@@ -47,8 +47,7 @@ export default {
       try {
         console.log('正在加载数据，queryId:', this.queryId, 'userId:', this.userId);
         
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.get(`${baseURL}/search/query_result/${this.queryId}`, {
+        const response = await axios.get(`/api/search/query_result/${this.queryId}`, {
           params: {
             userId: this.userId
           }
@@ -250,10 +249,27 @@ export default {
         headers.push(this.getColumnLabel(field));
       });
 
+      // 格式化时间为东八区时间，格式：YYYY-MM-DD HH:mm:ss.SSS
+      const formatBeijingTime = (date) => {
+        // 添加8小时转换为东八区时间
+        const timezoneOffset = 8 * 60 * 60 * 1000;
+        const beijingTime = new Date(date.getTime() + timezoneOffset);
+        
+        const year = beijingTime.getUTCFullYear();
+        const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+        const hours = String(beijingTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(beijingTime.getUTCSeconds()).padStart(2, '0');
+        const milliseconds = String(beijingTime.getUTCMilliseconds()).padStart(3, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+      };
+
       // 准备数据 - 按照fieldsOrder的顺序
       const data = this.queryResult.map(item => {
         const row = {
-          '时间戳': new Date(item.time).toISOString()
+          '时间戳': formatBeijingTime(new Date(item.time))
         };
         
         // 按照fieldsOrder的顺序添加数据
@@ -275,9 +291,12 @@ export default {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, '传感器数据');
       
-      // 生成文件名包含时间戳
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      XLSX.writeFile(workbook, `传感器数据_${timestamp}.xlsx`);
+      // 生成文件名包含时间戳（使用相同格式）
+      const currentTime = formatBeijingTime(new Date())
+        .replace(/[:.]/g, '-')  // 替换冒号和点为横线
+        .replace(' ', '_');     // 替换空格为下划线
+      
+      XLSX.writeFile(workbook, `传感器数据_${currentTime}.xlsx`);
       
       console.log(`数据导出耗时: ${Date.now() - exportStart}ms`);
     },

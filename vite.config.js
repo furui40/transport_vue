@@ -15,13 +15,15 @@ export default defineConfig({
     },
   },
   server: {
+    // host: '192.168.43.36',
+    host: 'localhost',
+    // port: 8081,
+    port: 5173,
     proxy: {
-      // 代理 API 请求
-      '/web': {
-        target: 'http://localhost:8080', // 后端服务器地址
-        changeOrigin: true, // 如果接口跨域，需要进行这个参数配置
-        secure: false, // 如果是https接口，需要配置这个参数
-        rewrite: (path) => path.replace(/^\/web/, ''), // 去掉路径中的 /web
+      '/api': {  // 所有后端请求以 /api 开头
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''), // 移除 /api 前缀
       },
     },
   },

@@ -95,9 +95,7 @@ export default {
           this.$message.warning('用户未登录，请先登录');
           return;
         }
-
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/download/searchapply`, null, {
+        const response = await axios.post(`/api/download/searchapply`, null, {
           params: {
             method: '1',
             userId: userId,

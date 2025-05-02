@@ -353,8 +353,7 @@ export default {
         }
       // 发送请求
       try {
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.post(`${baseURL}/search/high_sensor`, null, {
+        const response = await axios.post(`/api/search/high_sensor`, null, {
           params: {
             fields: fields.join(','),
             startTime: this.startTime,

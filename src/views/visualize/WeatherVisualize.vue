@@ -19,15 +19,15 @@
 
         <!-- 列选择器和绘制按钮 -->
         <div class="column-selector" v-if="data.length > 0">
-          <span class="text">自定义图表</span>
+          <!-- <span class="text">自定义图表</span>
           <el-button type="primary" @click="renderColumnPieChart">饼状图</el-button>
           <el-button type="success" @click="renderColumnBarChart">柱状图</el-button>
-          <el-button type="warning" @click="renderColumnLineChart">折线图</el-button>
+          <el-button type="warning" @click="renderColumnLineChart">折线图</el-button> -->
           <span class="text">取值范围为 {{ columnStats.min }} - {{ columnStats.max }}</span>
         </div>
 
         <!-- 区间配置输入区域 -->
-        <div class="range-config" v-if="selectedColumn && data.length > 0">
+        <!-- <div class="range-config" v-if="selectedColumn && data.length > 0">
           <div v-for="(range, index) in customRanges" :key="index" class="range-input">
             <el-input v-model="range.min" placeholder="最小值" style="width: 100px;"></el-input>
             <span> - </span>
@@ -37,7 +37,7 @@
             </el-button>
           </div>
           <el-button type="primary" @click="addRange">添加区间</el-button>
-        </div>
+        </div> -->
 
         <div class="chart-container">
           <div ref="chart" class="chart"></div>
@@ -123,31 +123,31 @@ export default {
     },
 
     // 渲染自定义饼状图
-    renderColumnPieChart() {
-      try {
-        renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
-      } catch (error) {
-        this.$message.warning(error.message);
-      }
-    },
+    // renderColumnPieChart() {
+    //   try {
+    //     renderColumnPieChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+    //   } catch (error) {
+    //     this.$message.warning(error.message);
+    //   }
+    // },
 
-    // 渲染柱状图
-    renderColumnBarChart() {
-      try {
-        renderColumnBarChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
-      } catch (error) {
-        this.$message.warning(error.message);
-      }
-    },
+    // // 渲染柱状图
+    // renderColumnBarChart() {
+    //   try {
+    //     renderColumnBarChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+    //   } catch (error) {
+    //     this.$message.warning(error.message);
+    //   }
+    // },
 
-    // 渲染折线图
-    renderColumnLineChart() {
-      try {
-        renderColumnLineChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
-      } catch (error) {
-        this.$message.warning(error.message);
-      }
-    },
+    // // 渲染折线图
+    // renderColumnLineChart() {
+    //   try {
+    //     renderColumnLineChart(this.$refs.chart, this.data, this.selectedColumn, this.customRanges, this.getColumnLabel);
+    //   } catch (error) {
+    //     this.$message.warning(error.message);
+    //   }
+    // },
 
     // 按数据点绘制折线图
     renderLineChartByDataPoints() {

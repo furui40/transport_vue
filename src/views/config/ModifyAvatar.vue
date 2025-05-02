@@ -37,8 +37,7 @@ export default {
     // 获取当前用户头像
     const fetchAvatar = async () => {
       try {
-        const baseURL = 'http://localhost:8080';
-        const response = await axios.get(`${baseURL}/avatar/getavatar?userId=${userId.value}`);
+        const response = await axios.get(`/api/avatar/getavatar?userId=${userId.value}`);
         if (response.data) {
           avatarUrl.value = response.data; // 设置头像 URL
           store.dispatch('user/updateAvatar', avatarUrl.value);

@@ -131,8 +131,7 @@ export default {
     // 数据获取方法
     async loadHistory() {
       try {
-        const baseURL = 'http://localhost:8080';
-        const { data } = await axios.get(`${baseURL}/upload/get_history`, {
+        const { data } = await axios.get(`/api/upload/get_history`, {
           params: { dataType: this.currentDataType }
         });
         if (data.code === 200) {
@@ -148,8 +147,7 @@ export default {
     async deleteHistory(item) {
       try {
         await this.$confirm('确定要删除这条记录吗?', '提示');
-        const baseURL = 'http://localhost:8080';
-        const { data } = await axios.post(`${baseURL}/upload/delete_history`, null,{
+        const { data } = await axios.post(`/api/upload/delete_history`, null,{
           params: {
             dataType: this.currentDataType,
             filePath: item.filePath

@@ -87,9 +87,8 @@ export default {
         if (valid) {
           try {
             const userId = store.state.user.userId; // 直接从 store 中获取 userId
-            const baseURL = 'http://localhost:8080';
             const response = await axios.post(
-              `${baseURL}/web/modifypassword`,
+              `/api/web/modifypassword`,
               null,
               {
                 params: {
