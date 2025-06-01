@@ -103,7 +103,7 @@
             <span class="menu-title">数据查询</span>
           </template>
           <el-menu-item index="dynamic-weighing" @click="goToDynamicWeighingSearch">
-            <el-icon><Weigh /></el-icon>
+            <el-icon><Odometer /></el-icon>
             <span>动态称重数据查询</span>
           </el-menu-item>
           <el-menu-item index="weather" @click="goToWeatherSearch">
@@ -137,7 +137,6 @@ import {
   Folder,
   Files,
   User,
-  Weigh,
   Sunny
 } from '@element-plus/icons-vue';
 
